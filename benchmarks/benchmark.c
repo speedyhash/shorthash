@@ -80,8 +80,7 @@ uint64_t global_rdtsc_overhead = (uint64_t) UINT64_MAX;
         min_diff -= global_rdtsc_overhead;                            \
         uint64_t S = (uint64_t)size;                                  \
         float cycle_per_op = (min_diff) / (float)S;                   \
-        float bytes_per_cycle = (float) S / (float) (min_diff);       \
-        printf("size = %d,  %.2f cycles per byte or %.2f bytes per cycle ", size, cycle_per_op, bytes_per_cycle);           \
+        printf("size = %d,  %.2f cycles per word ", size, cycle_per_op);           \
         if (wrong_answer) printf(" [ERROR]");                         \
         printf("\n");                                                 \
         fflush(NULL);                                                 \
@@ -175,8 +174,6 @@ void basic(uint32_t length) {
 
 
     printf("zobrist is 3-wise ind., linear is 2-wise ind., quadratic is 3-wise ind., cubic is 4-wise ind.\n");
-
-
 
     free(array);
     printf("\n");
