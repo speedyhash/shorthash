@@ -127,13 +127,7 @@ void flush(void* b, size_t length) {
     }
 }
 
-int main() {
-    uint32_t length = 1000;
-    uint32_t bigbuflen = 32000;
-    uint64_t * bigbuffer1 = (uint64_t*) malloc(bigbuflen);
-    uint64_t * bigbuffer2 = (uint64_t*) malloc(bigbuflen);
-
-
+void basic(uint32_t length) {
     printf("We will construct an array of %d words (using %d bytes), to be hashed.\n", (int) length, (int) ( length * sizeof(uint64_t)) );
     printf("Keys are flushed at the beginning of each run.\n");
     cl_linear_t cl_lineark;
@@ -176,7 +170,14 @@ int main() {
 
 
 
-    free(bigbuffer1);
-    free(bigbuffer2);
     free(array);
+    printf("\n");
+}
+
+int main() {
+    basic(10);
+    basic(20);
+    basic(100);
+
+
 }
