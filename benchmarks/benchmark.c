@@ -220,8 +220,8 @@ void basic32(uint32_t length) {
     zobrist32_t zobristk;
     zobrist32_init(&  zobristk);
 
-    printf(" sizeof(cl_quadratick) = %d,sizeof(zobristk) = %d \n",
-          (int) sizeof(cl_quadratick), (int) sizeof(zobristk));
+    printf(" sizeof(cl_lineark) = %d, sizeof(cl_quadratick) = %d, sizeof(zobristk) = %d \n",
+          (int) sizeof(cl_lineark), (int) sizeof(cl_quadratick), (int) sizeof(zobristk));
 
     uint32_t * array = malloc(sizeof(uint32_t) * length);
     for(uint32_t i = 0; i < length; ++i) {
