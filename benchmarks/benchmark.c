@@ -178,6 +178,8 @@ int main() {
     basic(10);
     basic(20);
     basic(100);
+    basic(1000);
 
+    printf("Large runs are beneficial to tabulation-based hashing because they amortize cache faults.\n");
 
 }
