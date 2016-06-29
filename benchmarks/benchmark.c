@@ -110,16 +110,33 @@ uint64_t demo_cl_quadratic(uint64_t * array, uint32_t length, cl_quadratic_t * k
     return sum;
 }
 
+uint64_t demo_cl_cubic(uint64_t * array, uint32_t length, cl_cubic_t * k) {
+    uint64_t sum = 0;
+    for(uint32_t x = 0; x < length; ++x) {
+      sum += cl_cubic(array[x],k);
+    }
+    return sum;
+}
+
+
 int main() {
     uint32_t length = 1000;
+    printf("We will construct an array of %d words (using %d bytes), to be hashed.\n", (int) length, (int) ( length * sizeof(uint64_t)) );
     cl_linear_t cl_lineark;
     cl_linear_init(& cl_lineark);
-
+   
     cl_quadratic_t cl_quadratick;
     cl_quadratic_init(& cl_quadratick);
+ 
+    cl_cubic_t cl_cubick;
+    cl_cubic_init(& cl_cubick);
+
 
     zobrist_t zobristk;
     zobrist_init(&  zobristk);
+
+    printf("sizeof(cl_lineark) = %d, sizeof(cl_quadratick) = %d, sizeof(cl_cubick) = %d,  sizeof(zobristk) = %d \n",
+          (int) sizeof(cl_lineark), (int) sizeof(cl_quadratick), (int) sizeof(cl_cubick), (int) sizeof(zobristk));
 
     uint64_t * array = malloc(sizeof(uint64_t) * length);
     for(uint32_t i = 0; i < length; ++i) {
@@ -137,6 +154,11 @@ int main() {
 
     expected = demo_cl_quadratic(array,length, &cl_quadratick);
     BEST_TIME(demo_cl_quadratic(array,length, &cl_quadratick), expected, repeat,  size);
+
+    expected = demo_cl_cubic(array,length, &cl_cubick);
+    BEST_TIME(demo_cl_cubic(array,length, &cl_cubick), expected, repeat,  size);
+
+
 
 
     free(array);
