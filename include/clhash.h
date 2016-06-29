@@ -56,9 +56,6 @@ uint64_t cl_linear(uint64_t x, cl_linear_t * t) {
   return _mm_cvtsi128_si64(reduction64_si128(productplusconstant));
 }
 
-
-
-
 typedef struct cl_quadratic_s {
   __m128i multiplier;
   __m128i constant; // high 64-bit should be zero
@@ -72,7 +69,6 @@ void cl_quadratic_init(cl_quadratic_t * k) {
 // this simply computes   A x^2 + Bx +C modulo
 // should be 3-wise ind.
 uint64_t cl_quadratic(uint64_t x, cl_quadratic_t * t) {
-
   __m128i inputasvector = _mm_cvtsi64_si128(x);
   __m128i inputsquare = reduction64_si128(_mm_clmulepi64_si128(inputasvector,inputasvector,0x00));
   __m128i product1 = _mm_clmulepi64_si128( inputasvector, t->multiplier, 0x00);
@@ -98,7 +94,6 @@ void cl_cubic_init(cl_cubic_t * k) {
 // this simply computes   A x^3 + B x^2 + C x + D modulo
 // should be 4-wise ind.
 uint64_t cl_cubic(uint64_t x, cl_cubic_t * t) {
-
   __m128i inputasvector = _mm_cvtsi64_si128(x);
   __m128i inputsquare = reduction64_si128(_mm_clmulepi64_si128(inputasvector,inputasvector,0x00));
   __m128i inputcube = reduction64_si128(_mm_clmulepi64_si128(inputsquare,inputasvector,0x00));
@@ -111,6 +106,5 @@ uint64_t cl_cubic(uint64_t x, cl_cubic_t * t) {
   __m128i answer = reduction64_si128(sum);
   return _mm_cvtsi128_si64(answer);
 }
-
 
 #endif
