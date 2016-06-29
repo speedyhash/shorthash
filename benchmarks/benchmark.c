@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "tabulated.h"
 #include "clhash.h"
@@ -57,7 +58,7 @@ uint64_t global_rdtsc_overhead = (uint64_t) UINT64_MAX;
  * test is the function call,  repeat is the number of times we should repeat and size is the
  * number of operations represented by test.
  */
-#define BEST_TIME(test, expected, repeat,  size)                           \
+#define BEST_TIME(test, pre, expected, repeat,  size)                           \
     do {                                                              \
         if (global_rdtsc_overhead == UINT64_MAX) {                    \
            RDTSC_SET_OVERHEAD(rdtsc_overhead_func(1), repeat);        \
@@ -69,6 +70,7 @@ uint64_t global_rdtsc_overhead = (uint64_t) UINT64_MAX;
         int wrong_answer = 0;                                         \
         for (int i = 0; i < repeat; i++) {                            \
             __asm volatile("" ::: /* pretend to clobber */ "memory"); \
+            pre;                                                      \
             RDTSC_START(cycles_start);                                \
             if (test != expected) wrong_answer = 1;                     \
             RDTSC_FINAL(cycles_final);                                \
@@ -118,10 +120,22 @@ uint64_t demo_cl_cubic(uint64_t * array, uint32_t length, cl_cubic_t * k) {
     return sum;
 }
 
+void flush(void* b, size_t length) {
+    char * B = (char *) b;
+    for (uint32_t k = 0; k < length; k += 64) {
+        __builtin_ia32_clflush(B + k);
+    }
+}
 
 int main() {
     uint32_t length = 1000;
+    uint32_t bigbuflen = 32000;
+    uint64_t * bigbuffer1 = (uint64_t*) malloc(bigbuflen);
+    uint64_t * bigbuffer2 = (uint64_t*) malloc(bigbuflen);
+
+
     printf("We will construct an array of %d words (using %d bytes), to be hashed.\n", (int) length, (int) ( length * sizeof(uint64_t)) );
+    printf("Keys are flushed at the beginning of each run.\n");
     cl_linear_t cl_lineark;
     cl_linear_init(& cl_lineark);
    
@@ -147,19 +161,22 @@ int main() {
     int repeat = 500;
 
     expected = demo_zobrist(array,length, &zobristk);
-    BEST_TIME(demo_zobrist(array,length, &zobristk), expected, repeat,  size);
+    BEST_TIME(demo_zobrist(array,length, &zobristk),flush(&zobristk,sizeof(zobristk)), expected, repeat,  size);
+
 
     expected = demo_cl_linear(array,length, &cl_lineark);
-    BEST_TIME(demo_cl_linear(array,length, &cl_lineark), expected, repeat,  size);
+    BEST_TIME(demo_cl_linear(array,length, &cl_lineark),flush(&cl_lineark,sizeof(cl_lineark)), expected, repeat,  size);
+
 
     expected = demo_cl_quadratic(array,length, &cl_quadratick);
-    BEST_TIME(demo_cl_quadratic(array,length, &cl_quadratick), expected, repeat,  size);
+    BEST_TIME(demo_cl_quadratic(array,length, &cl_quadratick),flush(&cl_quadratick,sizeof(cl_quadratick)), expected, repeat,  size);
 
     expected = demo_cl_cubic(array,length, &cl_cubick);
-    BEST_TIME(demo_cl_cubic(array,length, &cl_cubick), expected, repeat,  size);
+    BEST_TIME(demo_cl_cubic(array,length, &cl_cubick),flush( &cl_cubick,sizeof(cl_cubick)), expected, repeat,  size);
 
 
 
-
+    free(bigbuffer1);
+    free(bigbuffer2);
     free(array);
 }
