@@ -13,5 +13,11 @@ static uint64_t get64rand() {
     (((uint64_t) rand() << 48) & 0xFFFF000000000000ull);
 }
 
+static uint32_t get32rand() {
+    return
+    (((uint32_t) rand() <<  0) & 0x0000FFFFul) |
+    (((uint32_t) rand() << 16) & 0xFFFF0000ul);
+}
+
 
 #endif

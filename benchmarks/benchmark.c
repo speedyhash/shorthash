@@ -112,6 +112,7 @@ uint64_t demo_cl_quadratic(uint64_t * array, uint32_t length, cl_quadratic_t * k
     return sum;
 }
 
+
 uint64_t demo_cl_cubic(uint64_t * array, uint32_t length, cl_cubic_t * k) {
     uint64_t sum = 0;
     for(uint32_t x = 0; x < length; ++x) {
@@ -119,6 +120,9 @@ uint64_t demo_cl_cubic(uint64_t * array, uint32_t length, cl_cubic_t * k) {
     }
     return sum;
 }
+
+
+
 
 void flush(void* b, size_t length) {
     char * B = (char *) b;
@@ -128,14 +132,15 @@ void flush(void* b, size_t length) {
 }
 
 void basic(uint32_t length) {
+    printf("Testing 64-bit hashing.\n");
     printf("We will construct an array of %d words (using %d bytes), to be hashed.\n", (int) length, (int) ( length * sizeof(uint64_t)) );
     printf("Keys are flushed at the beginning of each run.\n");
     cl_linear_t cl_lineark;
     cl_linear_init(& cl_lineark);
-   
+
     cl_quadratic_t cl_quadratick;
     cl_quadratic_init(& cl_quadratick);
- 
+
     cl_cubic_t cl_cubick;
     cl_cubic_init(& cl_cubick);
 
@@ -169,16 +174,92 @@ void basic(uint32_t length) {
     BEST_TIME(demo_cl_cubic(array,length, &cl_cubick),flush( &cl_cubick,sizeof(cl_cubick)), expected, repeat,  size);
 
 
+    printf("zobrist is 3-wise ind., linear is 2-wise ind., quadratic is 3-wise ind., cubic is 4-wise ind.\n");
+
+
+
+    free(array);
+    printf("\n");
+}
+uint32_t demo_zobrist32(uint32_t * array, uint32_t length, zobrist32_t * k) {
+    uint32_t sum = 0;
+    for(uint32_t x = 0; x < length; ++x) {
+      sum += zobrist32(array[x],k);
+    }
+    return sum;
+}
+
+
+uint32_t demo_cl_quadratic32(uint32_t * array, uint32_t length, cl_quadratic_t * k) {
+    uint32_t sum = 0;
+    for(uint32_t x = 0; x < length; ++x) {
+      sum += cl_quadratic32(array[x],k);
+    }
+    return sum;
+}
+
+
+uint32_t demo_cl_linear32(uint32_t * array, uint32_t length, cl_linear_t * k) {
+    uint32_t sum = 0;
+    for(uint32_t x = 0; x < length; ++x) {
+      sum += cl_linear32(array[x],k);
+    }
+    return sum;
+}
+
+void basic32(uint32_t length) {
+    printf("Testing 32-bit hashing.\n");
+    printf("We will construct an array of %d words (using %d bytes), to be hashed.\n", (int) length, (int) ( length * sizeof(uint32_t)) );
+    printf("Keys are flushed at the beginning of each run.\n");
+    cl_quadratic_t cl_quadratick;
+    cl_quadratic32_init(& cl_quadratick);
+
+    cl_linear_t cl_lineark;
+    cl_linear32_init(& cl_lineark);
+
+    zobrist32_t zobristk;
+    zobrist32_init(&  zobristk);
+
+    printf(" sizeof(cl_quadratick) = %d,sizeof(zobristk) = %d \n",
+          (int) sizeof(cl_quadratick), (int) sizeof(zobristk));
+
+    uint32_t * array = malloc(sizeof(uint32_t) * length);
+    for(uint32_t i = 0; i < length; ++i) {
+      array[i] = get32rand();
+    }
+    uint32_t expected;
+    uint32_t size = length;
+    int repeat = 500;
+
+    expected = demo_zobrist32(array,length, &zobristk);
+    BEST_TIME(demo_zobrist32(array,length, &zobristk),flush(&zobristk,sizeof(zobristk)), expected, repeat,  size);
+
+    expected = demo_cl_linear32(array,length, &cl_lineark);
+    BEST_TIME(demo_cl_linear32(array,length, &cl_lineark),flush(&cl_quadratick,sizeof(cl_lineark)), expected, repeat,  size);
+
+
+    expected = demo_cl_quadratic32(array,length, &cl_quadratick);
+    BEST_TIME(demo_cl_quadratic32(array,length, &cl_quadratick),flush(&cl_quadratick,sizeof(cl_quadratick)), expected, repeat,  size);
+
+    printf("zobrist is 3-wise ind., linear is 2-wise ind., quadratic is 3-wise ind.\n");
+
 
     free(array);
     printf("\n");
 }
 
+
 int main() {
+    printf("=======");
     basic(10);
     basic(20);
     basic(100);
     basic(1000);
+    printf("=======");
+    basic32(10);
+    basic32(20);
+    basic32(100);
+    basic32(1000);
 
     printf("Large runs are beneficial to tabulation-based hashing because they amortize cache faults.\n");
 
