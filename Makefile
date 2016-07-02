@@ -3,7 +3,7 @@
 #
 .SUFFIXES: .cpp .o .c .h
 
-SHARED_FLAGS = -fPIC -std=c99 -mssse3 -mpclmul -Wall -Wextra -Wshadow
+SHARED_FLAGS = -fPIC -std=c99 -march=native -Wall -Wextra -Wshadow
 
 ifeq ($(DEBUG),1)
 CFLAGS = $(SHARED_FLAGS) -ggdb -fsanitize=undefined -fno-omit-frame-pointer -fsanitize=address
