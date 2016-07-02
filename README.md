@@ -4,7 +4,9 @@ How fast can you hash a 64-bit or 32-bit machine word?
 
 ### Requirements
 
-- Recent Intel processor (e.g., Skylake)
+- x86-64 processor supporting the SSSE3 and CLMUL instruction sets
+  (most since 2011)
+
 - Linux like system
 
 ## Usage

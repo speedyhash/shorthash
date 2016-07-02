@@ -14,7 +14,6 @@
 #include <wmmintrin.h>
 #include <pmmintrin.h>
 #include <tmmintrin.h>
-#include <smmintrin.h>
 ///////// End of compatibility hack.
 
 /**
