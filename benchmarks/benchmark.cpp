@@ -13,7 +13,7 @@ extern "C" {
 }
 
 inline uint64_t RDTSC_START() {
-    register unsigned cyc_high, cyc_low;
+    unsigned cyc_high, cyc_low;
     __asm volatile("cpuid\n\t"
                    "rdtsc\n\t"
                    "mov %%edx, %0\n\t"
@@ -24,7 +24,7 @@ inline uint64_t RDTSC_START() {
 }
 
 inline uint64_t RDTSC_FINAL() {
-    register unsigned cyc_high, cyc_low;
+    unsigned cyc_high, cyc_low;
     __asm volatile("rdtscp\n\t"
                    "mov %%edx, %0\n\t"
                    "mov %%eax, %1\n\t"
