@@ -222,7 +222,7 @@ void basic32(uint32_t length, int repeat) {
 }
 
 int main() {
-    int repeat = 500;
+    int repeat = 50000;
     if (global_rdtsc_overhead == UINT64_MAX) {
         RDTSC_SET_OVERHEAD(repeat);
     }
