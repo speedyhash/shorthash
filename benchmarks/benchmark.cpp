@@ -4,6 +4,8 @@
 
 #include <iomanip>
 #include <iostream>
+#include <limits>
+#include <vector>
 
 using namespace std;
 
@@ -122,131 +124,125 @@ struct HashBench {
 static const int FIRST_FIELD_WIDTH = 20;
 static const int FIELD_WIDTH = 16;
 
-void basic(uint32_t length, int repeat) {
-    cl_linear_t cl_lineark;
-    cl_linear_init(&cl_lineark);
+template <typename T>
+inline float Bench(const typename T::Word *input, uint32_t length, int repeat) {
+    typename T::Randomness randomness;
+    T::InitRandomness(&randomness);
 
-    cl_quadratic_t cl_quadratick;
-    cl_quadratic_init(&cl_quadratick);
+    repeat = repeat / length;
 
-    cl_cubic_t cl_cubick;
-    cl_cubic_init(&cl_cubick);
-
-    zobrist_t zobristk;
-    zobrist_init(&zobristk);
-
-    zobrist_flat_t zobrist_flatk;
-    zobrist_flat_init(&zobrist_flatk);
-
-    MultiplyShift64Randomness multiply_shiftk;
-    MultiplyShift64Init(&multiply_shiftk);
-
-    static bool first_run = true;
-    if (first_run) {
-        printf("Testing 64-bit hashing.\n");
-
-        printf("sizeof(cl_lineark) = %d, sizeof(cl_quadratick) = %d, "
-               "sizeof(cl_cubick) = %d,  sizeof(zobristk) = %d, "
-               "sizeof(MultiplyShift64Randomness) = %d\n",
-               (int)sizeof(cl_lineark), (int)sizeof(cl_quadratick),
-               (int)sizeof(cl_cubick), (int)sizeof(zobristk),
-               (int)sizeof(MultiplyShift64Randomness));
-        cout << setw(FIELD_WIDTH) << "array size \\ hash fn"
-             << setw(FIELD_WIDTH) << "zobrist" << setw(FIELD_WIDTH)
-             << "transposed" << setw(FIELD_WIDTH) << "multiply-shift"
-             << setw(FIELD_WIDTH) << "cl_linear" << setw(FIELD_WIDTH)
-             << "cl_quadratic" << setw(FIELD_WIDTH) << "cl_cubic" << endl;
-        first_run = false;
-    }
-
-    uint64_t *array = (uint64_t *)malloc(sizeof(uint64_t) * length);
-    for (uint32_t i = 0; i < length; ++i) {
-        array[i] = get64rand();
-    }
-
-    uint32_t size = length;
-
-    repeat = repeat / size;
-
-    cout << setw(FIRST_FIELD_WIDTH) << length;
-    HashBench<zobrist_t, uint64_t, zobrist> demo_zobrist(array, length,
-                                                         &zobristk);
-    cout << setw(FIELD_WIDTH) << fixed << setprecision(2)
-         << BEST_TIME(demo_zobrist, repeat, size);
-
-    HashBench<zobrist_flat_t, uint64_t, zobrist_flat_transpose>
-        demo_zobrist_flat_transpose(array, length, &zobrist_flatk);
-    cout << setw(FIELD_WIDTH)
-         << BEST_TIME(demo_zobrist_flat_transpose, repeat, size);
-
-    HashBench<MultiplyShift64Randomness, uint64_t, MultiplyShift64>
-        demo_multiply_shift(array, length, &multiply_shiftk);
-    cout << setw(FIELD_WIDTH) << BEST_TIME(demo_multiply_shift, repeat, size);
-
-    HashBench<cl_linear_t, uint64_t, cl_linear> demo_linear(array, length,
-                                                            &cl_lineark);
-    cout << setw(FIELD_WIDTH) << BEST_TIME(demo_linear, repeat, size);
-
-    HashBench<cl_quadratic_t, uint64_t, cl_quadratic> demo_quadratic(
-        array, length, &cl_quadratick);
-    cout << setw(FIELD_WIDTH) << BEST_TIME(demo_quadratic, repeat, size);
-
-    HashBench<cl_cubic_t, uint64_t, cl_cubic> demo_cubic(array, length,
-                                                         &cl_cubick);
-    cout << setw(FIELD_WIDTH) << BEST_TIME(demo_cubic, repeat, size);
-
-    free(array);
-    printf("\n");
+    HashBench<typename T::Randomness, typename T::Word, &T::HashFunction> demo(
+        input, length, &randomness);
+    return BEST_TIME(demo, repeat, length);
 }
 
-void basic32(uint32_t length, int repeat) {
-    cl_quadratic_t cl_quadratick;
-    cl_quadratic32_init(&cl_quadratick);
-
-    cl_linear_t cl_lineark;
-    cl_linear32_init(&cl_lineark);
-
-    zobrist32_t zobristk;
-    zobrist32_init(&zobristk);
-
-    static bool first_run = true;
-    if (first_run) {
-        printf("Testing 32-bit hashing.\n");
-        printf("sizeof(cl_lineark) = %d, sizeof(cl_quadratick) = %d, "
-               "sizeof(zobristk) = %d \n",
-               (int)sizeof(cl_lineark), (int)sizeof(cl_quadratick),
-               (int)sizeof(zobristk));
-        cout << setw(FIRST_FIELD_WIDTH) << "array size \\ hash fn"
-             << setw(FIELD_WIDTH) << "zobrist" << setw(FIELD_WIDTH)
-             << "cl_linear" << setw(FIELD_WIDTH) << "cl_quadratic" << endl;
-        first_run = false;
+template <typename WordP, typename RandomnessP,
+          void (*InitRandomnessP)(RandomnessP *),
+          WordP (*HashFunctionP)(WordP, const RandomnessP *)>
+struct GenericPack {
+    typedef WordP Word;
+    typedef RandomnessP Randomness;
+    static inline void InitRandomness(Randomness *r) { InitRandomnessP(r); }
+    static inline Word HashFunction(Word x, const Randomness *r) {
+        return HashFunctionP(x, r);
     }
+};
 
-    uint32_t *array = (uint32_t *)malloc(sizeof(uint32_t) * length);
-    for (uint32_t i = 0; i < length; ++i) {
-        array[i] = get32rand();
-    }
+struct Zobrist64Pack
+    : public GenericPack<uint64_t, zobrist_t, zobrist_init, zobrist> {
+    static constexpr auto NAME = "Zobrist64";
+};
 
-    uint32_t size = length;
+struct ZobristTranspose64Pack
+    : public GenericPack<uint64_t, zobrist_flat_t, zobrist_flat_init,
+                         zobrist_flat_transpose> {
+    static constexpr auto NAME = "Transposed64";
+};
 
-    repeat = repeat / size;
+struct ClLinear64Pack
+    : public GenericPack<uint64_t, cl_linear_t, cl_linear_init, cl_linear> {
+    static constexpr auto NAME = "ClLinear64";
+};
 
-    cout << setw(FIRST_FIELD_WIDTH) << length;
-    HashBench<zobrist32_t, uint32_t, zobrist32> demo_zobrist(array, length,
-                                                         &zobristk);
+struct MultiplyShift64Pack
+    : public GenericPack<uint64_t, MultiplyShift64Randomness,
+                         MultiplyShift64Init, MultiplyShift64> {
+    static constexpr auto NAME = "MultiplyShift64";
+};
+
+struct ClQuadratic64Pack : public GenericPack<uint64_t, cl_quadratic_t,
+                                              cl_quadratic_init, cl_quadratic> {
+    static constexpr auto NAME = "ClQuadratic64";
+};
+
+struct ClCubic64Pack
+    : public GenericPack<uint64_t, cl_cubic_t, cl_cubic_init, cl_cubic> {
+    static constexpr auto NAME = "ClCubic64";
+};
+
+struct Zobrist32Pack
+    : public GenericPack<uint32_t, zobrist32_t, zobrist32_init, zobrist32> {
+    static constexpr auto NAME = "Zobrist32";
+};
+
+struct ClLinear32Pack
+    : public GenericPack<uint32_t, cl_linear_t, cl_linear32_init, cl_linear32> {
+    static constexpr auto NAME = "ClLinear32";
+};
+
+struct ClQuadratic32Pack
+    : public GenericPack<uint32_t, cl_quadratic_t, cl_quadratic32_init,
+                         cl_quadratic32> {
+    static constexpr auto NAME = "ClQuadratic32";
+};
+
+template <typename... Pack> inline void BenchPack(...) { cout << endl; }
+
+template <typename Pack, typename... Rest>
+inline void BenchPack(const typename Pack::Word *input, uint32_t length,
+                      int repeat) {
     cout << setw(FIELD_WIDTH) << fixed << setprecision(2)
-         << BEST_TIME(demo_zobrist, repeat, size);
+         << Bench<Pack>(&input[0], length, repeat);
+    BenchPack<Rest...>(input, length, repeat);
+}
 
-    HashBench<cl_linear_t, uint32_t, cl_linear32> demo_linear(array, length,
-                                                            &cl_lineark);
-    cout << setw(FIELD_WIDTH) << BEST_TIME(demo_linear, repeat, size);
+template <typename... Pack> inline void NamePack(...) { cout << endl; }
 
-    HashBench<cl_quadratic_t, uint32_t, cl_quadratic32> demo_quadratic(
-        array, length, &cl_quadratick);
-    cout << setw(FIELD_WIDTH) << BEST_TIME(demo_quadratic, repeat, size);
+template <typename Pack, typename... Rest>
+inline void NamePack(typename Pack::Word dummy) {
+    cout << setw(FIELD_WIDTH) << Pack::NAME;
+    NamePack<Rest...>(dummy);
+}
 
-    free(array);
-    printf("\n");
+template <typename... Pack> inline void SizePack(...) { cout << endl; }
+
+template <typename Pack, typename... Rest>
+inline void SizePack(typename Pack::Word dummy) {
+    cout << setw(FIELD_WIDTH) << sizeof(typename Pack::Randomness);
+    SizePack<Rest...>(dummy);
+}
+
+template <typename Pack, typename... Packs>
+void RunSizedBench(uint32_t length, int repeat) {
+    vector<typename Pack::Word> input(length);
+    for (auto &i : input) {
+        i = get64rand();
+    }
+    cout << setw(FIRST_FIELD_WIDTH) << length;
+    BenchPack<Pack, Packs...>(&input[0], length, repeat);
+}
+
+template <typename Pack, typename... Packs>
+void basic(const vector<uint32_t> &lengths, int repeat) {
+    cout << numeric_limits<typename Pack::Word>::digits << " bit hash functions"
+         << endl;
+    cout << setw(FIRST_FIELD_WIDTH) << "size \\ hash fn";
+    NamePack<Pack, Packs...>(0);
+    cout << setw(FIRST_FIELD_WIDTH) << "rand size";
+    SizePack<Pack, Packs...>(0);
+    for (const auto length : lengths) {
+        RunSizedBench<Pack, Packs...>(length, repeat);
+    }
 }
 
 int main() {
@@ -257,17 +253,12 @@ int main() {
     printf("zobrist is 3-wise ind., linear is 2-wise ind., quadratic is 3-wise "
            "ind., cubic is 4-wise ind.\n");
     printf("Keys are flushed at the beginning of each run.\n");
-    printf("=======");
-    basic(10, repeat);
-    basic(20, repeat);
-    basic(100, repeat);
-    basic(1000, repeat);
+    const vector<uint32_t> sizes{10, 20, 100, 1000};
 
-    printf("=======");
-    basic32(10, repeat);
-    basic32(20, repeat);
-    basic32(100, repeat);
-    basic32(1000, repeat);
+    basic<Zobrist64Pack, ZobristTranspose64Pack, MultiplyShift64Pack,
+          ClLinear64Pack, ClQuadratic64Pack, ClCubic64Pack>(sizes, repeat);
+
+    basic<Zobrist32Pack, ClLinear32Pack, ClQuadratic32Pack>(sizes, repeat);
 
     printf("Large runs are beneficial to tabulation-based hashing because they "
            "amortize cache faults.\n");
