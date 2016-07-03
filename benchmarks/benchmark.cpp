@@ -57,71 +57,64 @@ void RDTSC_SET_OVERHEAD(int repeat) {
  * and size is the
  * number of operations represented by test.
  */
-#define BEST_TIME(test, pre, expected, repeat, size)                           \
-    do {                                                                       \
-        if (global_rdtsc_overhead == UINT64_MAX) {                             \
-            RDTSC_SET_OVERHEAD(repeat);                                        \
-        }                                                                      \
-        printf("%s: ", #test);                                                 \
-        fflush(NULL);                                                          \
-        uint64_t cycles_start, cycles_final, cycles_diff;                      \
-        uint64_t min_diff = (uint64_t)-1;                                      \
-        int wrong_answer = 0;                                                  \
-        for (int i = 0; i < repeat; i++) {                                     \
-            __asm volatile("" ::: /* pretend to clobber */ "memory");          \
-            pre;                                                               \
-            cycles_start = RDTSC_START();                                      \
-            if (test != expected)                                              \
-                wrong_answer = 1;                                              \
-            cycles_final = RDTSC_FINAL();                                      \
-            cycles_diff = (cycles_final - cycles_start);                       \
-            if (cycles_diff < min_diff)                                        \
-                min_diff = cycles_diff;                                        \
-        }                                                                      \
-        min_diff -= global_rdtsc_overhead;                                     \
-        uint64_t S = (uint64_t)size;                                           \
-        float cycle_per_op = (min_diff) / (float)S;                            \
-        printf("size = %d,  %.2f cycles per word ", size, cycle_per_op);       \
-        if (wrong_answer)                                                      \
-            printf(" [ERROR]");                                                \
-        printf("\n");                                                          \
-        fflush(NULL);                                                          \
-    } while (0)
-
-uint64_t demo_zobrist(uint64_t *array, uint32_t length, zobrist_t *k) {
-    uint64_t sum = 0;
-    for (uint32_t x = 0; x < length; ++x) {
-        sum += zobrist(array[x], k);
+template <typename T>
+inline void BEST_TIME(const T &hasher, int repeat, int size) {
+    if (global_rdtsc_overhead == UINT64_MAX) {
+        RDTSC_SET_OVERHEAD(repeat);
     }
-    return sum;
+    fflush(NULL);
+    uint64_t cycles_start, cycles_final, cycles_diff;
+    uint64_t min_diff = (uint64_t)-1;
+    int wrong_answer = 0;
+    for (int i = 0; i < repeat; i++) {
+        __asm volatile("" ::: /* pretend to clobber */ "memory");
+        hasher.Restart();
+        cycles_start = RDTSC_START();
+        if (hasher.Hash() != hasher.expected_)
+            wrong_answer = 1;
+        cycles_final = RDTSC_FINAL();
+        cycles_diff = (cycles_final - cycles_start);
+        if (cycles_diff < min_diff)
+            min_diff = cycles_diff;
+    }
+    min_diff -= global_rdtsc_overhead;
+    uint64_t S = (uint64_t)size;
+    float cycle_per_op = (min_diff) / (float)S;
+    printf("size = %d,  %.2f cycles per word ", size, cycle_per_op);
+    if (wrong_answer)
+        printf(" [ERROR]");
+    printf("\n");
+    fflush(NULL);
 }
 
-uint64_t demo_cl_linear(uint64_t *array, uint32_t length, cl_linear_t *k) {
-    uint64_t sum = 0;
-    for (uint32_t x = 0; x < length; ++x) {
-        sum += cl_linear(array[x], k);
+template <typename HashDataType, typename HashValueType,
+          HashValueType HashFunction(HashValueType, const HashDataType *)>
+struct HashBench {
+  inline void Restart() const {
+    flush(&k_, sizeof(k_));
+  }
+
+  inline HashValueType Hash() const {
+    HashValueType sum = 0;
+    for (uint32_t x = 0; x < length_; ++x) {
+        sum += HashFunction(array_[x], k_);
     }
     return sum;
-}
+  }
 
-uint64_t demo_cl_quadratic(uint64_t *array, uint32_t length,
-                           cl_quadratic_t *k) {
-    uint64_t sum = 0;
-    for (uint32_t x = 0; x < length; ++x) {
-        sum += cl_quadratic(array[x], k);
-    }
-    return sum;
-}
+  HashBench(const HashValueType *const array, const uint32_t length,
+            const HashDataType *const k)
+    : array_(array), length_(length), k_(k) {
+      expected_ = Hash();
+  }
 
-uint64_t demo_cl_cubic(uint64_t *array, uint32_t length, cl_cubic_t *k) {
-    uint64_t sum = 0;
-    for (uint32_t x = 0; x < length; ++x) {
-        sum += cl_cubic(array[x], k);
-    }
-    return sum;
-}
+  const HashValueType * const array_;
+  const uint32_t length_;
+  const HashDataType * const k_;
+  HashValueType expected_;
+};
 
-void flush(void *b, size_t length) {
+void flush(const void *b, size_t length) {
     char *B = (char *)b;
     for (uint32_t k = 0; k < length; k += 64) {
         __builtin_ia32_clflush(B + k);
@@ -155,57 +148,35 @@ void basic(uint32_t length) {
     for (uint32_t i = 0; i < length; ++i) {
         array[i] = get64rand();
     }
-    uint64_t expected;
+
     uint32_t size = length;
     int repeat = 500;
 
-    expected = demo_zobrist(array, length, &zobristk);
-    BEST_TIME(demo_zobrist(array, length, &zobristk),
-              flush(&zobristk, sizeof(zobristk)), expected, repeat, size);
+    printf("zobrist: ");
+    HashBench<zobrist_t, uint64_t, zobrist> demo_zobrist(array, length,
+                                                         &zobristk);
+    BEST_TIME(demo_zobrist, repeat, size);
 
-    expected = demo_cl_linear(array, length, &cl_lineark);
-    BEST_TIME(demo_cl_linear(array, length, &cl_lineark),
-              flush(&cl_lineark, sizeof(cl_lineark)), expected, repeat, size);
+    printf("cl_linear: ");
+    HashBench<cl_linear_t, uint64_t, cl_linear> demo_linear(array, length,
+                                                            &cl_lineark);
+    BEST_TIME(demo_linear, repeat, size);
 
-    expected = demo_cl_quadratic(array, length, &cl_quadratick);
-    BEST_TIME(demo_cl_quadratic(array, length, &cl_quadratick),
-              flush(&cl_quadratick, sizeof(cl_quadratick)), expected, repeat,
-              size);
+    printf("cl_quadratic: ");
+    HashBench<cl_quadratic_t, uint64_t, cl_quadratic> demo_quadratic(
+        array, length, &cl_quadratick);
+    BEST_TIME(demo_quadratic, repeat, size);
 
-    expected = demo_cl_cubic(array, length, &cl_cubick);
-    BEST_TIME(demo_cl_cubic(array, length, &cl_cubick),
-              flush(&cl_cubick, sizeof(cl_cubick)), expected, repeat, size);
+    printf("cl_cubic: ");
+    HashBench<cl_cubic_t, uint64_t, cl_cubic> demo_cubic(array, length,
+                                                         &cl_cubick);
+    BEST_TIME(demo_cubic, repeat, size);
 
     printf("zobrist is 3-wise ind., linear is 2-wise ind., quadratic is 3-wise "
            "ind., cubic is 4-wise ind.\n");
 
     free(array);
     printf("\n");
-}
-
-uint32_t demo_zobrist32(uint32_t *array, uint32_t length, zobrist32_t *k) {
-    uint32_t sum = 0;
-    for (uint32_t x = 0; x < length; ++x) {
-        sum += zobrist32(array[x], k);
-    }
-    return sum;
-}
-
-uint32_t demo_cl_quadratic32(uint32_t *array, uint32_t length,
-                             cl_quadratic_t *k) {
-    uint32_t sum = 0;
-    for (uint32_t x = 0; x < length; ++x) {
-        sum += cl_quadratic32(array[x], k);
-    }
-    return sum;
-}
-
-uint32_t demo_cl_linear32(uint32_t *array, uint32_t length, cl_linear_t *k) {
-    uint32_t sum = 0;
-    for (uint32_t x = 0; x < length; ++x) {
-        sum += cl_linear32(array[x], k);
-    }
-    return sum;
 }
 
 void basic32(uint32_t length) {
@@ -232,23 +203,24 @@ void basic32(uint32_t length) {
     for (uint32_t i = 0; i < length; ++i) {
         array[i] = get32rand();
     }
-    uint32_t expected;
+
     uint32_t size = length;
     int repeat = 500;
 
-    expected = demo_zobrist32(array, length, &zobristk);
-    BEST_TIME(demo_zobrist32(array, length, &zobristk),
-              flush(&zobristk, sizeof(zobristk)), expected, repeat, size);
+    printf("zobrist: ");
+    HashBench<zobrist32_t, uint32_t, zobrist32> demo_zobrist(array, length,
+                                                         &zobristk);
+    BEST_TIME(demo_zobrist, repeat, size);
 
-    expected = demo_cl_linear32(array, length, &cl_lineark);
-    BEST_TIME(demo_cl_linear32(array, length, &cl_lineark),
-              flush(&cl_quadratick, sizeof(cl_lineark)), expected, repeat,
-              size);
+    printf("cl_linear: ");
+    HashBench<cl_linear_t, uint32_t, cl_linear32> demo_linear(array, length,
+                                                            &cl_lineark);
+    BEST_TIME(demo_linear, repeat, size);
 
-    expected = demo_cl_quadratic32(array, length, &cl_quadratick);
-    BEST_TIME(demo_cl_quadratic32(array, length, &cl_quadratick),
-              flush(&cl_quadratick, sizeof(cl_quadratick)), expected, repeat,
-              size);
+    printf("cl_quadratic: ");
+    HashBench<cl_quadratic_t, uint32_t, cl_quadratic32> demo_quadratic(
+        array, length, &cl_quadratick);
+    BEST_TIME(demo_quadratic, repeat, size);
 
     printf("zobrist is 3-wise ind., linear is 2-wise ind., quadratic is 3-wise "
            "ind.\n");

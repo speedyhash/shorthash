@@ -17,7 +17,7 @@ void zobrist_init(zobrist_t *k) {
     }
 }
 
-uint64_t zobrist(uint64_t val, zobrist_t *k) {
+uint64_t zobrist(uint64_t val, const zobrist_t *k) {
     uint64_t h = 0;
     const unsigned char *s = (const unsigned char *)&val;
     h ^= k->hashtab[0][s[0]];
@@ -43,7 +43,7 @@ void zobrist32_init(zobrist32_t *k) {
     }
 }
 
-uint32_t zobrist32(uint32_t val, zobrist32_t *k) {
+uint32_t zobrist32(uint32_t val, const zobrist32_t *k) {
     uint32_t h = 0;
     const unsigned char *s = (const unsigned char *)&val;
     h ^= k->hashtab[0][s[0]];

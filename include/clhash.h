@@ -53,7 +53,7 @@ void cl_linear_init(cl_linear_t *k) {
 }
 
 // this simply computes A x+B modulo
-uint64_t cl_linear(uint64_t x, cl_linear_t *t) {
+uint64_t cl_linear(uint64_t x, const cl_linear_t *t) {
     __m128i inputasvector = _mm_cvtsi64_si128(x);
     __m128i product = _mm_clmulepi64_si128(inputasvector, t->multiplier, 0x00);
     __m128i productplusconstant = _mm_xor_si128(product, t->constant);
@@ -70,7 +70,7 @@ void cl_linear32_init(cl_linear_t *k) {
 }
 
 // this simply computes A x+B modulo
-uint32_t cl_linear32(uint32_t x, cl_linear_t *t) {
+uint32_t cl_linear32(uint32_t x, const cl_linear_t *t) {
     __m128i inputasvector = _mm_cvtsi32_si128(x);
     __m128i product = _mm_clmulepi64_si128(inputasvector, t->multiplier, 0x00);
     __m128i productplusconstant = _mm_xor_si128(product, t->constant);
@@ -94,7 +94,7 @@ void cl_quadratic_init(cl_quadratic_t *k) {
 
 // this simply computes   A x^2 + Bx +C modulo
 // should be 3-wise ind.
-uint64_t cl_quadratic(uint64_t x, cl_quadratic_t *t) {
+uint64_t cl_quadratic(uint64_t x, const cl_quadratic_t *t) {
     __m128i inputasvector = _mm_cvtsi64_si128(x);
     __m128i inputsquare = reduction64_si128(
         _mm_clmulepi64_si128(inputasvector, inputasvector, 0x00));
@@ -118,7 +118,7 @@ void cl_quadratic32_init(cl_quadratic_t *k) {
 
 // this simply computes   A x^2 + Bx +C modulo
 // should be 3-wise ind.
-uint32_t cl_quadratic32(uint32_t x, cl_quadratic_t *t) {
+uint32_t cl_quadratic32(uint32_t x, const cl_quadratic_t *t) {
     __m128i inputasvector = _mm_cvtsi32_si128(x); // spans 32 bits
     __m128i inputsquare = _mm_clmulepi64_si128(inputasvector, inputasvector,
                                                0x00); // spans 64 bits
@@ -150,7 +150,7 @@ void cl_cubic_init(cl_cubic_t *k) {
 
 // this simply computes   A x^3 + B x^2 + C x + D modulo
 // should be 4-wise ind.
-uint64_t cl_cubic(uint64_t x, cl_cubic_t *t) {
+uint64_t cl_cubic(uint64_t x, const cl_cubic_t *t) {
     __m128i inputasvector = _mm_cvtsi64_si128(x);
     __m128i inputsquare = reduction64_si128(
         _mm_clmulepi64_si128(inputasvector, inputasvector, 0x00));
