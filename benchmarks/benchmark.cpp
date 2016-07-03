@@ -2,6 +2,11 @@
 #include <cstdlib>
 #include <cstring>
 
+#include <iomanip>
+#include <iostream>
+
+using namespace std;
+
 extern "C" {
 #include "tabulated.h"
 #include "clhash.h"
@@ -59,9 +64,6 @@ void RDTSC_SET_OVERHEAD(int repeat) {
  */
 template <typename T>
 inline void BEST_TIME(const T &hasher, int repeat, int size) {
-    if (global_rdtsc_overhead == UINT64_MAX) {
-        RDTSC_SET_OVERHEAD(repeat);
-    }
     fflush(NULL);
     uint64_t cycles_start, cycles_final, cycles_diff;
     uint64_t min_diff = (uint64_t)-1;
@@ -80,7 +82,7 @@ inline void BEST_TIME(const T &hasher, int repeat, int size) {
     min_diff -= global_rdtsc_overhead;
     uint64_t S = (uint64_t)size;
     float cycle_per_op = (min_diff) / (float)S;
-    printf("size = %d,  %.2f cycles per word ", size, cycle_per_op);
+    printf("%.2f cycles per word ", cycle_per_op);
     if (wrong_answer)
         printf(" [ERROR]");
     printf("\n");
@@ -121,12 +123,11 @@ void flush(const void *b, size_t length) {
     }
 }
 
-void basic(uint32_t length) {
+void basic(uint32_t length, int repeat) {
     printf("Testing 64-bit hashing.\n");
     printf("We will construct an array of %d words (using %d bytes), to be "
            "hashed.\n",
            (int)length, (int)(length * sizeof(uint64_t)));
-    printf("Keys are flushed at the beginning of each run.\n");
     cl_linear_t cl_lineark;
     cl_linear_init(&cl_lineark);
 
@@ -150,41 +151,36 @@ void basic(uint32_t length) {
     }
 
     uint32_t size = length;
-    int repeat = 500;
 
-    printf("zobrist: ");
+    cout << setw(20) << "zobrist: ";
     HashBench<zobrist_t, uint64_t, zobrist> demo_zobrist(array, length,
                                                          &zobristk);
     BEST_TIME(demo_zobrist, repeat, size);
 
-    printf("cl_linear: ");
+    cout << setw(20) << "cl_linear: ";
     HashBench<cl_linear_t, uint64_t, cl_linear> demo_linear(array, length,
                                                             &cl_lineark);
     BEST_TIME(demo_linear, repeat, size);
 
-    printf("cl_quadratic: ");
+    cout << setw(20) << "cl_quadratic: ";
     HashBench<cl_quadratic_t, uint64_t, cl_quadratic> demo_quadratic(
         array, length, &cl_quadratick);
     BEST_TIME(demo_quadratic, repeat, size);
 
-    printf("cl_cubic: ");
+    cout << setw(20) << "cl_cubic: ";
     HashBench<cl_cubic_t, uint64_t, cl_cubic> demo_cubic(array, length,
                                                          &cl_cubick);
     BEST_TIME(demo_cubic, repeat, size);
-
-    printf("zobrist is 3-wise ind., linear is 2-wise ind., quadratic is 3-wise "
-           "ind., cubic is 4-wise ind.\n");
 
     free(array);
     printf("\n");
 }
 
-void basic32(uint32_t length) {
+void basic32(uint32_t length, int repeat) {
     printf("Testing 32-bit hashing.\n");
     printf("We will construct an array of %d words (using %d bytes), to be "
            "hashed.\n",
            (int)length, (int)(length * sizeof(uint32_t)));
-    printf("Keys are flushed at the beginning of each run.\n");
     cl_quadratic_t cl_quadratick;
     cl_quadratic32_init(&cl_quadratick);
 
@@ -205,41 +201,44 @@ void basic32(uint32_t length) {
     }
 
     uint32_t size = length;
-    int repeat = 500;
 
-    printf("zobrist: ");
+    cout << setw(20) << "zobrist: ";
     HashBench<zobrist32_t, uint32_t, zobrist32> demo_zobrist(array, length,
                                                          &zobristk);
     BEST_TIME(demo_zobrist, repeat, size);
 
-    printf("cl_linear: ");
+    cout << setw(20) << "cl_linear: ";
     HashBench<cl_linear_t, uint32_t, cl_linear32> demo_linear(array, length,
                                                             &cl_lineark);
     BEST_TIME(demo_linear, repeat, size);
 
-    printf("cl_quadratic: ");
+    cout << setw(20) << "cl_quadratic: ";
     HashBench<cl_quadratic_t, uint32_t, cl_quadratic32> demo_quadratic(
         array, length, &cl_quadratick);
     BEST_TIME(demo_quadratic, repeat, size);
-
-    printf("zobrist is 3-wise ind., linear is 2-wise ind., quadratic is 3-wise "
-           "ind.\n");
 
     free(array);
     printf("\n");
 }
 
 int main() {
+    int repeat = 500;
+    if (global_rdtsc_overhead == UINT64_MAX) {
+        RDTSC_SET_OVERHEAD(repeat);
+    }
+    printf("zobrist is 3-wise ind., linear is 2-wise ind., quadratic is 3-wise "
+           "ind., cubic is 4-wise ind.\n");
+    printf("Keys are flushed at the beginning of each run.\n");
     printf("=======");
-    basic(10);
-    basic(20);
-    basic(100);
-    basic(1000);
+    basic(10, repeat);
+    basic(20, repeat);
+    basic(100, repeat);
+    basic(1000, repeat);
     printf("=======");
-    basic32(10);
-    basic32(20);
-    basic32(100);
-    basic32(1000);
+    basic32(10, repeat);
+    basic32(20, repeat);
+    basic32(100, repeat);
+    basic32(1000, repeat);
 
     printf("Large runs are beneficial to tabulation-based hashing because they "
            "amortize cache faults.\n");
