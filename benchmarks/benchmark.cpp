@@ -160,6 +160,8 @@ void basic(uint32_t length, int repeat) {
 
     uint32_t size = length;
 
+    repeat = repeat / size;
+
     cout << setw(FIRST_FIELD_WIDTH) << length;
     HashBench<zobrist_t, uint64_t, zobrist> demo_zobrist(array, length,
                                                          &zobristk);
@@ -220,6 +222,8 @@ void basic32(uint32_t length, int repeat) {
 
     uint32_t size = length;
 
+    repeat = repeat / size;
+
     cout << setw(FIRST_FIELD_WIDTH) << length;
     HashBench<zobrist32_t, uint32_t, zobrist32> demo_zobrist(array, length,
                                                          &zobristk);
@@ -239,7 +243,7 @@ void basic32(uint32_t length, int repeat) {
 }
 
 int main() {
-    int repeat = 50000;
+    int repeat = 5000000;
     if (global_rdtsc_overhead == UINT64_MAX) {
         RDTSC_SET_OVERHEAD(repeat);
     }
