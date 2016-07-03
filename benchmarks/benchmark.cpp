@@ -63,30 +63,24 @@ void RDTSC_SET_OVERHEAD(int repeat) {
  * number of operations represented by test.
  */
 template <typename T>
-inline void BEST_TIME(const T &hasher, int repeat, int size) {
-    fflush(NULL);
+inline float BEST_TIME(const T &hasher, int repeat, int size) {
     uint64_t cycles_start, cycles_final, cycles_diff;
     uint64_t min_diff = (uint64_t)-1;
-    int wrong_answer = 0;
+    bool wrong_answer = false;
     for (int i = 0; i < repeat; i++) {
         __asm volatile("" ::: /* pretend to clobber */ "memory");
         hasher.Restart();
         cycles_start = RDTSC_START();
         if (hasher.Hash() != hasher.expected_)
-            wrong_answer = 1;
+            wrong_answer = true;
         cycles_final = RDTSC_FINAL();
         cycles_diff = (cycles_final - cycles_start);
         if (cycles_diff < min_diff)
             min_diff = cycles_diff;
     }
+    if (wrong_answer) return -1;
     min_diff -= global_rdtsc_overhead;
-    uint64_t S = (uint64_t)size;
-    float cycle_per_op = (min_diff) / (float)S;
-    printf("%.2f cycles per word ", cycle_per_op);
-    if (wrong_answer)
-        printf(" [ERROR]");
-    printf("\n");
-    fflush(NULL);
+    return min_diff / (float)size;
 }
 
 template <typename HashDataType, typename HashValueType,
@@ -124,10 +118,6 @@ void flush(const void *b, size_t length) {
 }
 
 void basic(uint32_t length, int repeat) {
-    printf("Testing 64-bit hashing.\n");
-    printf("We will construct an array of %d words (using %d bytes), to be "
-           "hashed.\n",
-           (int)length, (int)(length * sizeof(uint64_t)));
     cl_linear_t cl_lineark;
     cl_linear_init(&cl_lineark);
 
@@ -140,10 +130,23 @@ void basic(uint32_t length, int repeat) {
     zobrist_t zobristk;
     zobrist_init(&zobristk);
 
-    printf("sizeof(cl_lineark) = %d, sizeof(cl_quadratick) = %d, "
-           "sizeof(cl_cubick) = %d,  sizeof(zobristk) = %d \n",
-           (int)sizeof(cl_lineark), (int)sizeof(cl_quadratick),
-           (int)sizeof(cl_cubick), (int)sizeof(zobristk));
+    static const int FIRST_FIELD_WIDTH = 20;
+    static const int FIELD_WIDTH = 13;
+
+    static bool first_run = true;
+    if (first_run) {
+        printf("Testing 64-bit hashing.\n");
+
+        printf("sizeof(cl_lineark) = %d, sizeof(cl_quadratick) = %d, "
+               "sizeof(cl_cubick) = %d,  sizeof(zobristk) = %d \n",
+               (int)sizeof(cl_lineark), (int)sizeof(cl_quadratick),
+               (int)sizeof(cl_cubick), (int)sizeof(zobristk));
+        cout << setw(FIELD_WIDTH) << "array size \\ hash fn"
+             << setw(FIELD_WIDTH) << "zobrist" << setw(FIELD_WIDTH)
+             << "cl_linear" << setw(FIELD_WIDTH) << "cl_quadratic"
+             << setw(FIELD_WIDTH) << "cl_cubic" << endl;
+        first_run = false;
+    }
 
     uint64_t *array = (uint64_t *)malloc(sizeof(uint64_t) * length);
     for (uint32_t i = 0; i < length; ++i) {
@@ -152,35 +155,29 @@ void basic(uint32_t length, int repeat) {
 
     uint32_t size = length;
 
-    cout << setw(20) << "zobrist: ";
+    cout << setw(FIRST_FIELD_WIDTH) << length;
     HashBench<zobrist_t, uint64_t, zobrist> demo_zobrist(array, length,
                                                          &zobristk);
-    BEST_TIME(demo_zobrist, repeat, size);
+    cout << setw(FIELD_WIDTH) << fixed << setprecision(2)
+         << BEST_TIME(demo_zobrist, repeat, size);
 
-    cout << setw(20) << "cl_linear: ";
     HashBench<cl_linear_t, uint64_t, cl_linear> demo_linear(array, length,
                                                             &cl_lineark);
-    BEST_TIME(demo_linear, repeat, size);
+    cout << setw(FIELD_WIDTH) << BEST_TIME(demo_linear, repeat, size);
 
-    cout << setw(20) << "cl_quadratic: ";
     HashBench<cl_quadratic_t, uint64_t, cl_quadratic> demo_quadratic(
         array, length, &cl_quadratick);
-    BEST_TIME(demo_quadratic, repeat, size);
+    cout << setw(FIELD_WIDTH) << BEST_TIME(demo_quadratic, repeat, size);
 
-    cout << setw(20) << "cl_cubic: ";
     HashBench<cl_cubic_t, uint64_t, cl_cubic> demo_cubic(array, length,
                                                          &cl_cubick);
-    BEST_TIME(demo_cubic, repeat, size);
+    cout << setw(FIELD_WIDTH) << BEST_TIME(demo_cubic, repeat, size);
 
     free(array);
     printf("\n");
 }
 
 void basic32(uint32_t length, int repeat) {
-    printf("Testing 32-bit hashing.\n");
-    printf("We will construct an array of %d words (using %d bytes), to be "
-           "hashed.\n",
-           (int)length, (int)(length * sizeof(uint32_t)));
     cl_quadratic_t cl_quadratick;
     cl_quadratic32_init(&cl_quadratick);
 
@@ -190,10 +187,21 @@ void basic32(uint32_t length, int repeat) {
     zobrist32_t zobristk;
     zobrist32_init(&zobristk);
 
-    printf(" sizeof(cl_lineark) = %d, sizeof(cl_quadratick) = %d, "
-           "sizeof(zobristk) = %d \n",
-           (int)sizeof(cl_lineark), (int)sizeof(cl_quadratick),
-           (int)sizeof(zobristk));
+    static const int FIRST_FIELD_WIDTH = 20;
+    static const int FIELD_WIDTH = 13;
+
+    static bool first_run = true;
+    if (first_run) {
+        printf("Testing 32-bit hashing.\n");
+        printf("sizeof(cl_lineark) = %d, sizeof(cl_quadratick) = %d, "
+               "sizeof(zobristk) = %d \n",
+               (int)sizeof(cl_lineark), (int)sizeof(cl_quadratick),
+               (int)sizeof(zobristk));
+        cout << setw(FIRST_FIELD_WIDTH) << "array size \\ hash fn"
+             << setw(FIELD_WIDTH) << "zobrist" << setw(FIELD_WIDTH)
+             << "cl_linear" << setw(FIELD_WIDTH) << "cl_quadratic" << endl;
+        first_run = false;
+    }
 
     uint32_t *array = (uint32_t *)malloc(sizeof(uint32_t) * length);
     for (uint32_t i = 0; i < length; ++i) {
@@ -202,20 +210,19 @@ void basic32(uint32_t length, int repeat) {
 
     uint32_t size = length;
 
-    cout << setw(20) << "zobrist: ";
+    cout << setw(FIRST_FIELD_WIDTH) << length;
     HashBench<zobrist32_t, uint32_t, zobrist32> demo_zobrist(array, length,
                                                          &zobristk);
-    BEST_TIME(demo_zobrist, repeat, size);
+    cout << setw(FIELD_WIDTH) << fixed << setprecision(2)
+         << BEST_TIME(demo_zobrist, repeat, size);
 
-    cout << setw(20) << "cl_linear: ";
     HashBench<cl_linear_t, uint32_t, cl_linear32> demo_linear(array, length,
                                                             &cl_lineark);
-    BEST_TIME(demo_linear, repeat, size);
+    cout << setw(FIELD_WIDTH) << BEST_TIME(demo_linear, repeat, size);
 
-    cout << setw(20) << "cl_quadratic: ";
     HashBench<cl_quadratic_t, uint32_t, cl_quadratic32> demo_quadratic(
         array, length, &cl_quadratick);
-    BEST_TIME(demo_quadratic, repeat, size);
+    cout << setw(FIELD_WIDTH) << BEST_TIME(demo_quadratic, repeat, size);
 
     free(array);
     printf("\n");
