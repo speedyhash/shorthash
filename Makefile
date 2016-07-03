@@ -6,7 +6,8 @@
 SHARED_FLAGS = -fPIC -march=native -Wall -Wextra -Wshadow
 
 ifeq ($(DEBUG),1)
-FLAGS = $(SHARED_FLAGS) -ggdb -fsanitize=undefined -fno-omit-frame-pointer -fsanitize=address
+FLAGS = $(SHARED_FLAGS) -ggdb -fsanitize=undefined -fno-omit-frame-pointer \
+    -fsanitize=address
 else
 FLAGS = $(SHARED_FLAGS) -O3
 endif # debug
@@ -16,7 +17,8 @@ CXXFLAGS = $(FLAGS) -std=c++11
 
 all: benchmark $(OBJECTS)
 
-HEADERS=include/clhash.h include/tabulated.h include/util.h
+HEADERS = include/clhash.h include/tabulated.h include/util.h \
+    include/multiply-shift.h
 
 benchmark: ./benchmarks/benchmark.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -o benchmark ./benchmarks/benchmark.cpp -Iinclude

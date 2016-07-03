@@ -8,8 +8,9 @@
 using namespace std;
 
 extern "C" {
-#include "tabulated.h"
 #include "clhash.h"
+#include "multiply-shift.h"
+#include "tabulated.h"
 }
 
 inline uint64_t RDTSC_START() {
@@ -118,6 +119,9 @@ struct HashBench {
   HashValueType expected_;
 };
 
+static const int FIRST_FIELD_WIDTH = 20;
+static const int FIELD_WIDTH = 16;
+
 void basic(uint32_t length, int repeat) {
     cl_linear_t cl_lineark;
     cl_linear_init(&cl_lineark);
@@ -134,22 +138,24 @@ void basic(uint32_t length, int repeat) {
     zobrist_flat_t zobrist_flatk;
     zobrist_flat_init(&zobrist_flatk);
 
-    static const int FIRST_FIELD_WIDTH = 20;
-    static const int FIELD_WIDTH = 13;
+    MultiplyShift64Randomness multiply_shiftk;
+    MultiplyShift64Init(&multiply_shiftk);
 
     static bool first_run = true;
     if (first_run) {
         printf("Testing 64-bit hashing.\n");
 
         printf("sizeof(cl_lineark) = %d, sizeof(cl_quadratick) = %d, "
-               "sizeof(cl_cubick) = %d,  sizeof(zobristk) = %d \n",
+               "sizeof(cl_cubick) = %d,  sizeof(zobristk) = %d, "
+               "sizeof(MultiplyShift64Randomness) = %d\n",
                (int)sizeof(cl_lineark), (int)sizeof(cl_quadratick),
-               (int)sizeof(cl_cubick), (int)sizeof(zobristk));
+               (int)sizeof(cl_cubick), (int)sizeof(zobristk),
+               (int)sizeof(MultiplyShift64Randomness));
         cout << setw(FIELD_WIDTH) << "array size \\ hash fn"
              << setw(FIELD_WIDTH) << "zobrist" << setw(FIELD_WIDTH)
-             << "transposed" << setw(FIELD_WIDTH) << "cl_linear"
-             << setw(FIELD_WIDTH) << "cl_quadratic" << setw(FIELD_WIDTH)
-             << "cl_cubic" << endl;
+             << "transposed" << setw(FIELD_WIDTH) << "multiply-shift"
+             << setw(FIELD_WIDTH) << "cl_linear" << setw(FIELD_WIDTH)
+             << "cl_quadratic" << setw(FIELD_WIDTH) << "cl_cubic" << endl;
         first_run = false;
     }
 
@@ -172,6 +178,10 @@ void basic(uint32_t length, int repeat) {
         demo_zobrist_flat_transpose(array, length, &zobrist_flatk);
     cout << setw(FIELD_WIDTH)
          << BEST_TIME(demo_zobrist_flat_transpose, repeat, size);
+
+    HashBench<MultiplyShift64Randomness, uint64_t, MultiplyShift64>
+        demo_multiply_shift(array, length, &multiply_shiftk);
+    cout << setw(FIELD_WIDTH) << BEST_TIME(demo_multiply_shift, repeat, size);
 
     HashBench<cl_linear_t, uint64_t, cl_linear> demo_linear(array, length,
                                                             &cl_lineark);
@@ -198,9 +208,6 @@ void basic32(uint32_t length, int repeat) {
 
     zobrist32_t zobristk;
     zobrist32_init(&zobristk);
-
-    static const int FIRST_FIELD_WIDTH = 20;
-    static const int FIELD_WIDTH = 13;
 
     static bool first_run = true;
     if (first_run) {
