@@ -83,11 +83,19 @@ inline float BEST_TIME(const T &hasher, int repeat, int size) {
     return min_diff / (float)size;
 }
 
+void cache_flush(const void *b, size_t length) {
+  if (nullptr == b) return;
+    char *B = (char *)b;
+    for (uint32_t k = 0; k < length; k += 64) {
+        __builtin_ia32_clflush(B + k);
+    }
+}
+
 template <typename HashDataType, typename HashValueType,
           HashValueType HashFunction(HashValueType, const HashDataType *)>
 struct HashBench {
   inline void Restart() const {
-    flush(&k_, sizeof(k_));
+    cache_flush(k_, sizeof(*k_));
   }
 
   inline HashValueType Hash() const {
@@ -109,13 +117,6 @@ struct HashBench {
   const HashDataType * const k_;
   HashValueType expected_;
 };
-
-void flush(const void *b, size_t length) {
-    char *B = (char *)b;
-    for (uint32_t k = 0; k < length; k += 64) {
-        __builtin_ia32_clflush(B + k);
-    }
-}
 
 void basic(uint32_t length, int repeat) {
     cl_linear_t cl_lineark;
