@@ -35,22 +35,21 @@ static __attribute__((noinline)) uint64_t rdtsc_overhead_func(uint64_t dummy) {
 
 uint64_t global_rdtsc_overhead = (uint64_t)UINT64_MAX;
 
-#define RDTSC_SET_OVERHEAD(test, repeat)                                       \
-    do {                                                                       \
-        uint64_t cycles_start, cycles_final, cycles_diff;                      \
-        uint64_t min_diff = UINT64_MAX;                                        \
-        for (int i = 0; i < repeat; i++) {                                     \
-            __asm volatile("" ::: /* pretend to clobber */ "memory");          \
-            cycles_start = RDTSC_START();                                      \
-            test;                                                              \
-            cycles_final = RDTSC_FINAL();                                      \
-            cycles_diff = (cycles_final - cycles_start);                       \
-            if (cycles_diff < min_diff)                                        \
-                min_diff = cycles_diff;                                        \
-        }                                                                      \
-        global_rdtsc_overhead = min_diff;                                      \
-        printf("rdtsc_overhead set to %d\n", (int)global_rdtsc_overhead);      \
-    } while (0)
+void RDTSC_SET_OVERHEAD(int repeat) {
+    uint64_t cycles_start, cycles_final, cycles_diff;
+    uint64_t min_diff = UINT64_MAX;
+    for (int i = 0; i < repeat; i++) {
+        __asm volatile("" ::: /* pretend to clobber */ "memory");
+        cycles_start = RDTSC_START();
+        rdtsc_overhead_func(1);
+        cycles_final = RDTSC_FINAL();
+        cycles_diff = (cycles_final - cycles_start);
+        if (cycles_diff < min_diff)
+            min_diff = cycles_diff;
+    }
+    global_rdtsc_overhead = min_diff;
+    printf("rdtsc_overhead set to %d\n", (int)global_rdtsc_overhead);
+}
 
 /*
  * Prints the best number of operations per cycle where
@@ -61,7 +60,7 @@ uint64_t global_rdtsc_overhead = (uint64_t)UINT64_MAX;
 #define BEST_TIME(test, pre, expected, repeat, size)                           \
     do {                                                                       \
         if (global_rdtsc_overhead == UINT64_MAX) {                             \
-            RDTSC_SET_OVERHEAD(rdtsc_overhead_func(1), repeat);                \
+            RDTSC_SET_OVERHEAD(repeat);                                        \
         }                                                                      \
         printf("%s: ", #test);                                                 \
         fflush(NULL);                                                          \
