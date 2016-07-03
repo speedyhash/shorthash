@@ -1,9 +1,11 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
+extern "C" {
 #include "tabulated.h"
 #include "clhash.h"
+}
 
 #define RDTSC_START(cycles)                                                    \
     do {                                                                       \
@@ -152,7 +154,7 @@ void basic(uint32_t length) {
            (int)sizeof(cl_lineark), (int)sizeof(cl_quadratick),
            (int)sizeof(cl_cubick), (int)sizeof(zobristk));
 
-    uint64_t *array = malloc(sizeof(uint64_t) * length);
+    uint64_t *array = (uint64_t *)malloc(sizeof(uint64_t) * length);
     for (uint32_t i = 0; i < length; ++i) {
         array[i] = get64rand();
     }
@@ -229,7 +231,7 @@ void basic32(uint32_t length) {
            (int)sizeof(cl_lineark), (int)sizeof(cl_quadratick),
            (int)sizeof(zobristk));
 
-    uint32_t *array = malloc(sizeof(uint32_t) * length);
+    uint32_t *array = (uint32_t *)malloc(sizeof(uint32_t) * length);
     for (uint32_t i = 0; i < length; ++i) {
         array[i] = get32rand();
     }
