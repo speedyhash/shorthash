@@ -131,6 +131,9 @@ void basic(uint32_t length, int repeat) {
     zobrist_t zobristk;
     zobrist_init(&zobristk);
 
+    zobrist_flat_t zobrist_flatk;
+    zobrist_flat_init(&zobrist_flatk);
+
     static const int FIRST_FIELD_WIDTH = 20;
     static const int FIELD_WIDTH = 13;
 
@@ -144,8 +147,9 @@ void basic(uint32_t length, int repeat) {
                (int)sizeof(cl_cubick), (int)sizeof(zobristk));
         cout << setw(FIELD_WIDTH) << "array size \\ hash fn"
              << setw(FIELD_WIDTH) << "zobrist" << setw(FIELD_WIDTH)
-             << "cl_linear" << setw(FIELD_WIDTH) << "cl_quadratic"
-             << setw(FIELD_WIDTH) << "cl_cubic" << endl;
+             << "transposed" << setw(FIELD_WIDTH) << "cl_linear"
+             << setw(FIELD_WIDTH) << "cl_quadratic" << setw(FIELD_WIDTH)
+             << "cl_cubic" << endl;
         first_run = false;
     }
 
@@ -161,6 +165,11 @@ void basic(uint32_t length, int repeat) {
                                                          &zobristk);
     cout << setw(FIELD_WIDTH) << fixed << setprecision(2)
          << BEST_TIME(demo_zobrist, repeat, size);
+
+    HashBench<zobrist_flat_t, uint64_t, zobrist_flat_transpose>
+        demo_zobrist_flat_transpose(array, length, &zobrist_flatk);
+    cout << setw(FIELD_WIDTH)
+         << BEST_TIME(demo_zobrist_flat_transpose, repeat, size);
 
     HashBench<cl_linear_t, uint64_t, cl_linear> demo_linear(array, length,
                                                             &cl_lineark);
@@ -242,6 +251,7 @@ int main() {
     basic(20, repeat);
     basic(100, repeat);
     basic(1000, repeat);
+
     printf("=======");
     basic32(10, repeat);
     basic32(20, repeat);
