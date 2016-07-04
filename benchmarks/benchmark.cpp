@@ -200,7 +200,7 @@ struct ClQuadratic32Pack
 struct CWQuad32Pack
     : public GenericPack<uint32_t, CWRandomQuad32, CWRandomQuad32Init,
                          CWQuad32> {
-    static constexpr auto NAME = "CQQuad32";
+    static constexpr auto NAME = "CWQuad32";
 };
 
 template <typename... Pack> inline void BenchPack(...) { cout << endl; }
@@ -260,7 +260,7 @@ int main() {
     printf("zobrist is 3-wise ind., linear is 2-wise ind., quadratic is 3-wise "
            "ind., cubic is 4-wise ind.\n");
     printf("Keys are flushed at the beginning of each run.\n");
-    const vector<uint32_t> sizes{10, 20, 100, 1000};
+    const vector<uint32_t> sizes{10, 20, 100, 1000, 10000, 100000, 1000*1000};
 
     basic<Zobrist64Pack, ZobristTranspose64Pack, MultiplyShift64Pack,
           ClLinear64Pack, ClQuadratic64Pack, ClCubic64Pack>(sizes, repeat);
