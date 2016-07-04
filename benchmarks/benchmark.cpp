@@ -60,6 +60,15 @@ void RDTSC_SET_OVERHEAD(int repeat) {
     printf("rdtsc_overhead set to %d\n", (int)global_rdtsc_overhead);
 }
 
+
+typedef struct timing_stat_s {
+  float min_opc;// minimal number of operations per cycle
+  float max_opc;// maximal number of operations per cycle
+  float avg_opc; // average number of operations per cycle
+  bool wrong_answer;
+} timing_stat_t;
+
+
 /*
  * Prints the best number of operations per cycle where
  * test is the function call,  repeat is the number of times we should repeat
@@ -67,9 +76,11 @@ void RDTSC_SET_OVERHEAD(int repeat) {
  * number of operations represented by test.
  */
 template <typename T>
-inline float BEST_TIME(const T &hasher, int repeat, int size) {
+inline timing_stat_t BEST_TIME(const T &hasher, int repeat, int size) {
     uint64_t cycles_start, cycles_final, cycles_diff;
     uint64_t min_diff = (uint64_t)-1;
+    uint64_t max_diff = 0;
+    uint64_t sum_diff = 0;
     bool wrong_answer = false;
     for (int i = 0; i < repeat; i++) {
         __asm volatile("" ::: /* pretend to clobber */ "memory");
@@ -81,10 +92,16 @@ inline float BEST_TIME(const T &hasher, int repeat, int size) {
         cycles_diff = (cycles_final - cycles_start);
         if (cycles_diff < min_diff)
             min_diff = cycles_diff;
+        if (cycles_diff > max_diff)
+            max_diff = cycles_diff;
+        sum_diff += cycles_diff;
     }
-    if (wrong_answer) return -1;
-    min_diff -= global_rdtsc_overhead;
-    return min_diff / (float)size;
+    timing_stat_t stat;
+    stat.wrong_answer =  wrong_answer;
+    stat.min_opc = min_diff / (float)size;
+    stat.max_opc = max_diff / (float)size;
+    stat.avg_opc = sum_diff / (float) ( repeat * size );
+    return stat;
 }
 
 void cache_flush(const void *b, size_t length) {
@@ -126,12 +143,11 @@ static const int FIRST_FIELD_WIDTH = 20;
 static const int FIELD_WIDTH = 16;
 
 template <typename T>
-inline float Bench(const typename T::Word *input, uint32_t length, int repeat) {
+inline timing_stat_t Bench(const typename T::Word *input, uint32_t length, int repeat) {
     typename T::Randomness randomness;
     T::InitRandomness(&randomness);
 
     repeat = repeat / length;
-
     HashBench<typename T::Randomness, typename T::Word, &T::HashFunction> demo(
         input, length, &randomness);
     return BEST_TIME(demo, repeat, length);
@@ -203,13 +219,21 @@ struct CWQuad32Pack
     static constexpr auto NAME = "CWQuad32";
 };
 
+
 template <typename... Pack> inline void BenchPack(...) { cout << endl; }
+
+
 
 template <typename Pack, typename... Rest>
 inline void BenchPack(const typename Pack::Word *input, uint32_t length,
                       int repeat) {
-    cout << setw(FIELD_WIDTH) << fixed << setprecision(2)
-         << Bench<Pack>(&input[0], length, repeat);
+    timing_stat_t t = Bench<Pack>(&input[0], length, repeat);
+
+    if(t.wrong_answer) {
+      cout << "BUG";
+    } else  {
+      cout << setw(FIELD_WIDTH) << fixed << setprecision(2) << t.min_opc ;
+    }
     BenchPack<Rest...>(input, length, repeat);
 }
 
@@ -253,7 +277,7 @@ void basic(const vector<uint32_t> &lengths, int repeat) {
 }
 
 int main() {
-    int repeat = 5000000;
+    int repeat = 500000;
     if (global_rdtsc_overhead == UINT64_MAX) {
         RDTSC_SET_OVERHEAD(repeat);
     }
