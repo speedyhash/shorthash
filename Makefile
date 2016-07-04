@@ -15,13 +15,16 @@ endif # debug
 CFLAGS = $(FLAGS) -std=c99
 CXXFLAGS = $(FLAGS) -std=c++11
 
-all: benchmark $(OBJECTS)
+all: benchmark.exe cw-trick-test.exe $(OBJECTS)
 
 HEADERS = include/clhash.h include/tabulated.h include/util.h \
-    include/multiply-shift.h
+    include/multiply-shift.h include/cw-trick.h
 
-benchmark: ./benchmarks/benchmark.cpp $(HEADERS)
-	$(CXX) $(CXXFLAGS) -o benchmark ./benchmarks/benchmark.cpp -Iinclude
+benchmark.exe: ./benchmarks/benchmark.cpp $(HEADERS)
+	$(CXX) $(CXXFLAGS) -o $@ $< -Iinclude
+
+cw-trick-test.exe: ./test/cw-trick-test.cpp $(HEADERS)
+	$(CXX) $(CXXFLAGS) -o $@ $< -Iinclude
 
 clean:
-	rm -f  *.o benchmark
+	rm -f *.o *.exe

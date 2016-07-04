@@ -11,6 +11,7 @@ using namespace std;
 
 extern "C" {
 #include "clhash.h"
+#include "cw-trick.h"
 #include "multiply-shift.h"
 #include "tabulated.h"
 }
@@ -196,6 +197,12 @@ struct ClQuadratic32Pack
     static constexpr auto NAME = "ClQuadratic32";
 };
 
+struct CWQuad32Pack
+    : public GenericPack<uint32_t, CWRandomQuad32, CWRandomQuad32Init,
+                         CWQuad32> {
+    static constexpr auto NAME = "CQQuad32";
+};
+
 template <typename... Pack> inline void BenchPack(...) { cout << endl; }
 
 template <typename Pack, typename... Rest>
@@ -258,7 +265,8 @@ int main() {
     basic<Zobrist64Pack, ZobristTranspose64Pack, MultiplyShift64Pack,
           ClLinear64Pack, ClQuadratic64Pack, ClCubic64Pack>(sizes, repeat);
 
-    basic<Zobrist32Pack, ClLinear32Pack, ClQuadratic32Pack>(sizes, repeat);
+    basic<Zobrist32Pack, ClLinear32Pack, ClQuadratic32Pack, CWQuad32Pack>(
+        sizes, repeat);
 
     printf("Large runs are beneficial to tabulation-based hashing because they "
            "amortize cache faults.\n");
