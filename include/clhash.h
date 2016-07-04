@@ -167,4 +167,113 @@ uint64_t cl_cubic(uint64_t x, const cl_cubic_t *t) {
     return _mm_cvtsi128_si64(answer);
 }
 
+void cl_cubic32_init(cl_cubic_t *k) {
+    k->multiplier1 =
+        _mm_set_epi64x((uint64_t)get32rand(), (uint64_t)get32rand());
+    k->multiplier2 =
+        _mm_set_epi64x((uint64_t)get32rand(), (uint64_t)get32rand());// one extra random value
+    k->constant = _mm_cvtsi32_si128(get32rand());
+}
+
+// this simply computes   A x^2 + Bx +C modulo
+// should be 3-wise ind.
+uint32_t cl_cubic32(uint32_t x, const cl_cubic_t *t) {
+    __m128i inputasvector = _mm_cvtsi32_si128(x); // spans 32 bits
+    __m128i inputsquare = _mm_clmulepi64_si128(inputasvector, inputasvector,
+                                               0x00); // spans 64 bits
+    __m128i inputcubic = _mm_clmulepi64_si128(inputsquare, inputasvector,
+                                               0x00); // spans 64 + 32 bits
+    inputcubic = fastreduction64_si128_for_small_A(inputcubic); // spans 64 bits
+
+    __m128i product1 = _mm_clmulepi64_si128(inputasvector, t->multiplier1,
+                                            0x00); // spans 64 bits
+    __m128i product2 = _mm_clmulepi64_si128(inputsquare, t->multiplier1,
+                                            0x10); // spans 64+32 bits
+    __m128i product3 = _mm_clmulepi64_si128(inputcubic, t->multiplier2,
+                                            0x00); // spans 64+32 bits
+    __m128i sum1 = _mm_xor_si128(product1, t->constant);
+    __m128i sum2 = _mm_xor_si128(product3, product2);
+    __m128i sum = _mm_xor_si128(sum1,sum2);
+    __m128i answer = fastreduction64_si128_for_small_A(sum);
+    return _mm_cvtsi128_si32(answer);
+}
+
+
+/***
+* Follows a 64-bit quartic hash
+**/
+
+typedef struct cl_quartic_s {
+    __m128i multiplier1;
+    __m128i multiplier2;
+    __m128i constant; // high 64-bit should be zero
+} cl_quartic_t;
+
+void cl_quartic_init(cl_quartic_t *k) {
+    k->multiplier1 = _mm_set_epi64x(get64rand(), get64rand());
+    k->multiplier2 = _mm_set_epi64x(get64rand(), get64rand());
+    k->constant = _mm_cvtsi64_si128(get64rand());
+}
+
+// this simply computes  A x^4 + B x^3 + c x^2 + D x + E modulo
+// should be 5-wise ind.
+uint64_t cl_quartic(uint64_t x, const cl_quartic_t *t) {
+    __m128i inputasvector = _mm_cvtsi64_si128(x);
+    __m128i inputsquare = reduction64_si128(
+        _mm_clmulepi64_si128(inputasvector, inputasvector, 0x00));
+    __m128i inputcube = reduction64_si128(
+        _mm_clmulepi64_si128(inputsquare, inputasvector, 0x00));
+    __m128i inputquartic = reduction64_si128(
+        _mm_clmulepi64_si128(inputsquare, inputsquare, 0x00));
+
+    __m128i product1 =
+        _mm_clmulepi64_si128(inputasvector, t->multiplier1, 0x00);
+    __m128i product2 = _mm_clmulepi64_si128(inputsquare, t->multiplier1, 0x10);
+    __m128i product3 = _mm_clmulepi64_si128(inputcube, t->multiplier2, 0x00);
+    __m128i product4 = _mm_clmulepi64_si128(inputquartic, t->multiplier2, 0x10);
+
+    __m128i sum1 = _mm_xor_si128(product1, t->constant);
+    __m128i sum2 = _mm_xor_si128(product2, product3);
+    __m128i sum = _mm_xor_si128(product4,_mm_xor_si128(sum1, sum2));
+    __m128i answer = reduction64_si128(sum);
+    return _mm_cvtsi128_si64(answer);
+}
+
+
+void cl_quartic32_init(cl_quartic_t *k) {
+    k->multiplier1 =
+        _mm_set_epi64x((uint64_t)get32rand(), (uint64_t)get32rand());
+    k->multiplier2 =
+        _mm_set_epi64x((uint64_t)get32rand(), (uint64_t)get32rand());// one extra random value
+    k->constant = _mm_cvtsi32_si128(get32rand());
+}
+
+// this simply computes   A x^2 + Bx +C modulo
+// should be 3-wise ind.
+uint32_t cl_quartic32(uint32_t x, const cl_quartic_t *t) {
+    __m128i inputasvector = _mm_cvtsi32_si128(x); // spans 32 bits
+    __m128i inputsquare = _mm_clmulepi64_si128(inputasvector, inputasvector,
+                                               0x00); // spans 64 bits
+    __m128i inputcubic = _mm_clmulepi64_si128(inputsquare, inputasvector,
+                                               0x00); // spans 64 + 32 bits
+    inputcubic = fastreduction64_si128_for_small_A(inputcubic); // spans 64 bits
+    __m128i inputquartic = _mm_clmulepi64_si128(inputcubic, inputasvector,
+    0x10); // spans 64 + 32 bits
+    inputquartic = fastreduction64_si128_for_small_A(inputquartic); // spans 64 bits
+
+    __m128i product1 = _mm_clmulepi64_si128(inputasvector, t->multiplier1,
+                                            0x00); // spans 64 bits
+    __m128i product2 = _mm_clmulepi64_si128(inputsquare, t->multiplier1,
+                                            0x10); // spans 64+32 bits
+    __m128i product3 = _mm_clmulepi64_si128(inputcubic, t->multiplier2,
+                                            0x00); // spans 64+32 bits
+    __m128i product4 = _mm_clmulepi64_si128(inputquartic, t->multiplier2,
+                                            0x10); // spans 64+32 bits
+    __m128i sum1 = _mm_xor_si128(product1, t->constant);
+    __m128i sum2 = _mm_xor_si128(product3, product2);
+    __m128i sum = _mm_xor_si128(product4,_mm_xor_si128(sum1,sum2));
+    __m128i answer = fastreduction64_si128_for_small_A(sum);
+    return _mm_cvtsi128_si32(answer);
+}
+
 #endif

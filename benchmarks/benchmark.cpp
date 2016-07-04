@@ -197,6 +197,11 @@ struct ClCubic64Pack
     static constexpr auto NAME = "ClCubic64";
 };
 
+struct ClQuartic64Pack
+    : public GenericPack<uint64_t, cl_quartic_t, cl_quartic_init, cl_quartic> {
+    static constexpr auto NAME = "ClQuartic64";
+};
+
 struct Zobrist32Pack
     : public GenericPack<uint32_t, zobrist32_t, zobrist32_init, zobrist32> {
     static constexpr auto NAME = "Zobrist32";
@@ -211,6 +216,18 @@ struct ClQuadratic32Pack
     : public GenericPack<uint32_t, cl_quadratic_t, cl_quadratic32_init,
                          cl_quadratic32> {
     static constexpr auto NAME = "ClQuadratic32";
+};
+
+struct ClCubic32Pack
+    : public GenericPack<uint32_t, cl_cubic_t, cl_cubic32_init,
+                         cl_cubic32> {
+    static constexpr auto NAME = "ClCubic32";
+};
+
+struct ClQuartic32Pack
+    : public GenericPack<uint32_t, cl_quartic_t, cl_quartic32_init,
+                         cl_quartic32> {
+    static constexpr auto NAME = "ClQuartic32";
 };
 
 struct CWQuad32Pack
@@ -288,10 +305,10 @@ int main() {
     vector<uint32_t> sizes {5,6,7,8,9,10,11,12,
                             13,14,15,16,17,18,19,20, 50, 100, 500, 1000, 100000};
     basic<Zobrist64Pack, ZobristTranspose64Pack, MultiplyShift64Pack,
-          ClLinear64Pack, ClQuadratic64Pack, ClCubic64Pack>(sizes, repeat);
+          ClLinear64Pack, ClQuadratic64Pack, ClCubic64Pack, ClQuartic64Pack>(sizes, repeat);
 
-    basic<Zobrist32Pack, ClLinear32Pack, ClQuadratic32Pack, CWQuad32Pack>(
-        sizes, repeat);
+    basic<Zobrist32Pack, ClLinear32Pack, ClQuadratic32Pack, ClCubic32Pack,
+          ClQuartic32Pack, CWQuad32Pack>(sizes, repeat);
 
     printf("Large runs are beneficial to tabulation-based hashing because they "
            "amortize cache faults.\n");
