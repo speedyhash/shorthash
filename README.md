@@ -11,19 +11,15 @@ How fast can you hash a 64-bit or 32-bit machine word?
 
 ## Usage
 
+- clang appears remarkably faster (``export CC=clang; export CXX=clang++``)
+
 ```bash
 make
 ./benchmark.exe
 ```
 
 ## Todo 
-- clang appears remarkably faster (``export CC=clang``)
 - Test with hash table 
 
 
 
-=======
-## Todo
->>>>>>> aabee0f9fdbe601193971934f3328b35981e3263
-
-- Test with hash table
