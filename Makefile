@@ -2,15 +2,29 @@
 .SUFFIXES:
 #
 .SUFFIXES: .cpp .o .c .h
-ifeq ($(DEBUG),1)
-CFLAGS = -fPIC  -std=c99 -ggdb -march=native -Wall -Wextra -Wshadow -fsanitize=undefined  -fno-omit-frame-pointer -fsanitize=address
-else
-CFLAGS = -fPIC -std=c99 -O3  -march=native -Wall -Wextra -Wshadow
-endif # debug
-all: benchmark $(OBJECTS)
-HEADERS=include/clhash.h  include/tabulated.h include/util.h
 
-benchmark: ./benchmarks/benchmark.c $(HEADERS)
-	$(CC) $(CFLAGS) -o benchmark ./benchmarks/benchmark.c -Iinclude
+SHARED_FLAGS = -fPIC -march=native -Wall -Wextra -Wshadow
+
+ifeq ($(DEBUG),1)
+FLAGS = $(SHARED_FLAGS) -ggdb -fsanitize=undefined -fno-omit-frame-pointer \
+    -fsanitize=address
+else
+FLAGS = $(SHARED_FLAGS) -O3
+endif # debug
+
+CFLAGS = $(FLAGS) -std=c99
+CXXFLAGS = $(FLAGS) -std=c++11
+
+all: benchmark.exe cw-trick-test.exe $(OBJECTS)
+
+HEADERS = include/clhash.h include/tabulated.h include/util.h \
+    include/multiply-shift.h include/cw-trick.h
+
+benchmark.exe: ./benchmarks/benchmark.cpp $(HEADERS)
+	$(CXX) $(CXXFLAGS) -o $@ $< -Iinclude
+
+cw-trick-test.exe: ./test/cw-trick-test.cpp $(HEADERS)
+	$(CXX) $(CXXFLAGS) -o $@ $< -Iinclude
+
 clean:
-	rm -f  *.o benchmark
+	rm -f *.o *.exe
