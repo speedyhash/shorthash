@@ -62,9 +62,9 @@ void RDTSC_SET_OVERHEAD(int repeat) {
 
 
 typedef struct timing_stat_s {
-  float min_opc;// minimal number of operations per cycle
-  float max_opc;// maximal number of operations per cycle
-  float avg_opc; // average number of operations per cycle
+  double min_opc;// minimal number of operations per cycle
+  double max_opc;// maximal number of operations per cycle
+  double avg_opc; // average number of operations per cycle
   bool wrong_answer;
 } timing_stat_t;
 
@@ -76,7 +76,7 @@ typedef struct timing_stat_s {
  * number of operations represented by test.
  */
 template <typename T>
-inline timing_stat_t BEST_TIME(const T &hasher, int repeat, int size) {
+inline timing_stat_t BEST_TIME(const T &hasher, int repeat, size_t size) {
     uint64_t cycles_start, cycles_final, cycles_diff;
     uint64_t min_diff = (uint64_t)-1;
     uint64_t max_diff = 0;
@@ -98,9 +98,9 @@ inline timing_stat_t BEST_TIME(const T &hasher, int repeat, int size) {
     }
     timing_stat_t stat;
     stat.wrong_answer =  wrong_answer;
-    stat.min_opc = min_diff / (float)size;
-    stat.max_opc = max_diff / (float)size;
-    stat.avg_opc = sum_diff / (float) ( repeat * size );
+    stat.min_opc = min_diff / (double) size;
+    stat.max_opc = max_diff / (double)size;
+    stat.avg_opc = sum_diff / (double) ( repeat * size );
     return stat;
 }
 
@@ -232,7 +232,7 @@ inline void BenchPack(const typename Pack::Word *input, uint32_t length,
     if(t.wrong_answer) {
       cout << "BUG";
     } else  {
-      cout << setw(FIELD_WIDTH) << fixed << setprecision(2) << t.min_opc ;
+      cout << setw(FIELD_WIDTH) << fixed << setprecision(2) << t.avg_opc ;
     }
     BenchPack<Rest...>(input, length, repeat);
 }
@@ -277,15 +277,16 @@ void basic(const vector<uint32_t> &lengths, int repeat) {
 }
 
 int main() {
-    int repeat = 500000;
+    int repeat = 100000;
     if (global_rdtsc_overhead == UINT64_MAX) {
         RDTSC_SET_OVERHEAD(repeat);
     }
     printf("zobrist is 3-wise ind., linear is 2-wise ind., quadratic is 3-wise "
            "ind., cubic is 4-wise ind.\n");
     printf("Keys are flushed at the beginning of each run.\n");
-    const vector<uint32_t> sizes{10, 20, 100, 1000, 10000, 100000, 1000*1000};
-
+    //const vector<uint32_t> sizes{10, 20, 100, 1000, 10000, 100000};
+    vector<uint32_t> sizes {5,6,7,8,9,10,11,12,
+                            13,14,15,16,17,18,19,20, 50, 100, 500, 1000, 100000};
     basic<Zobrist64Pack, ZobristTranspose64Pack, MultiplyShift64Pack,
           ClLinear64Pack, ClQuadratic64Pack, ClCubic64Pack>(sizes, repeat);
 
