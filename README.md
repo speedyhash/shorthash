@@ -13,7 +13,7 @@ How fast can you hash a 64-bit or 32-bit machine word?
 
 ```bash
 make
-./benchmark
+./benchmark.exe
 ```
 
 ## Todo 
