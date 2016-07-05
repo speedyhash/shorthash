@@ -89,7 +89,7 @@ inline timing_stat_t BEST_TIME(const T &hasher, int repeat, size_t size) {
         if (hasher.Hash() != hasher.expected_)
             wrong_answer = true;
         cycles_final = RDTSC_FINAL();
-        cycles_diff = (cycles_final - cycles_start);
+        cycles_diff = (cycles_final - cycles_start) - global_rdtsc_overhead;
         if (cycles_diff < min_diff)
             min_diff = cycles_diff;
         if (cycles_diff > max_diff)
