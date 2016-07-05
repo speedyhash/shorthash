@@ -179,6 +179,11 @@ struct Zobrist64Pack
     static constexpr auto NAME = "Zobrist64";
 };
 
+struct WZobrist64Pack
+    : public GenericPack<uint64_t, wzobrist_t, wzobrist_init, wzobrist> {
+    static constexpr auto NAME = "WZob64";
+};
+
 
 struct ThorupZhang64Pack
     : public GenericPack<uint64_t, thorupzhang_t, thorupzhang_init, thorupzhang> {
@@ -245,6 +250,10 @@ struct Zobrist32Pack
     static constexpr auto NAME = "Zobrist32";
 };
 
+struct WZobrist32Pack
+    : public GenericPack<uint32_t, wzobrist32_t, wzobrist32_init, wzobrist32> {
+    static constexpr auto NAME = "WZob32";
+};
 
 struct ThorupZhang32Pack
     : public GenericPack<uint32_t, thorupzhang32_t, thorupzhang32_init, thorupzhang32> {
@@ -371,10 +380,10 @@ int main() {
            "ind., cubic is 4-wise ind.\n");
     printf("Keys are flushed at the beginning of each run.\n");
     const vector<uint32_t> sizes{10, 20, 100, 1000, 10000, 100000,1000000};
-    basic<Zobrist64Pack, ZobristTranspose64Pack, ThorupZhang64Pack, MultiplyShift64Pack,
+    basic<Zobrist64Pack,WZobrist64Pack, ZobristTranspose64Pack, ThorupZhang64Pack, MultiplyShift64Pack,
           ClLinear64Pack, ClQuadratic64Pack, ClFastQuadratic64Pack, ClCubic64Pack, ClQuartic64Pack, ThorupZhangCWLinear64Pack, ThorupZhangCWQuadratic64Pack, ThorupZhangCWCubic64Pack>(sizes, repeat);
 
-    basic<Zobrist32Pack, ThorupZhang32Pack, MultiplyShift32Pack, ClLinear32Pack, ClQuadratic32Pack, ClCubic32Pack,
+    basic<Zobrist32Pack, WZobrist32Pack, ThorupZhang32Pack, MultiplyShift32Pack, ClLinear32Pack, ClQuadratic32Pack, ClCubic32Pack,
           ClQuartic32Pack, CWQuad32Pack, ThorupZhangCWLinear32Pack, ThorupZhangCWQuadratic32Pack, ThorupZhangCWCubic32Pack>(sizes, repeat);
 
     printf("Large runs are beneficial to tabulation-based hashing because they "

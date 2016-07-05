@@ -31,6 +31,30 @@ uint64_t zobrist(uint64_t val, const zobrist_t *k) {
     return h;
 }
 
+
+// "wide" zobrist
+typedef struct wzobrist_s {
+    uint64_t hashtab[sizeof(uint64_t)/2][1 << 16];
+} wzobrist_t;
+
+void wzobrist_init(wzobrist_t *k) {
+    for (uint32_t i = 0; i < sizeof(uint64_t)/2; i++) {
+        for (uint32_t j = 0; j < (1 << 16); j++) {
+            k->hashtab[i][j] = get64rand();
+        }
+    }
+}
+
+uint64_t wzobrist(uint64_t val, const wzobrist_t *k) {
+    uint64_t h = 0;
+    const uint16_t *s = (const uint16_t *)&val;
+    h ^= k->hashtab[0][s[0]];
+    h ^= k->hashtab[1][s[1]];
+    h ^= k->hashtab[2][s[2]];
+    h ^= k->hashtab[3][s[3]];
+    return h;
+}
+
 // Flat tabulation hashing, in which the randomness data is stored in a
 // one-dimensional array, rather than a two-dimensional one
 typedef struct zobrist_flat_s {
@@ -95,6 +119,25 @@ uint32_t zobrist32(uint32_t val, const zobrist32_t *k) {
     return h;
 }
 
+typedef struct wzobrist32_s {
+    uint32_t hashtab[sizeof(uint32_t)/2][1 << 16];
+} wzobrist32_t;
+
+void wzobrist32_init(wzobrist32_t *k) {
+    for (uint32_t i = 0; i < sizeof(uint32_t)/2; i++) {
+        for (uint32_t j = 0; j < (1 << 16); j++) {
+            k->hashtab[i][j] = get32rand();
+        }
+    }
+}
+
+uint32_t wzobrist32(uint32_t val, const wzobrist32_t *k) {
+    uint32_t h = 0;
+    const uint16_t *s = (const uint16_t *)&val;
+    h ^= k->hashtab[0][s[0]];
+    h ^= k->hashtab[1][s[1]];
+    return h;
+}
 
 /**
 * Rest is from Thorup & Zhang, Tabulation Based 4-Universal Hashing with Applications to
@@ -142,7 +185,7 @@ static inline uint64_t compress64(uint64_t i) {
   const uint64_t Mask2 = (((uint64_t)65535)<<42) + (((uint64_t)65535)<<21) + 65535;
   const uint64_t Mask3 = (((uint64_t)32)<<42) + (((uint64_t)32)<<21) + 31;
   return Mask1 + (i&Mask2) - ((i>>16)&Mask3);
-} 
+}
 
 uint64_t thorupzhang(uint64_t val, const thorupzhang_t *k) {
     const uint16_t *s = (const uint16_t *)&val;
