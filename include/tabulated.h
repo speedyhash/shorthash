@@ -95,4 +95,93 @@ uint32_t zobrist32(uint32_t val, const zobrist32_t *k) {
     return h;
 }
 
+
+/**
+* Rest is from Thorup & Zhang, Tabulation Based 4-Universal Hashing with Applications to
+Second Moment Estimation
+
+as well as
+
+Appendix for
+Tabulation Based 4-Universal Hashing with Applications to
+Second Moment Estimation
+*/
+
+
+typedef struct thorupzhang_s {
+    uint64_t basetab[4][1 << 16][2];
+    uint64_t hashtab[3][1 << 16];
+} thorupzhang_t;
+
+
+// Thorup and Zhang describe how this might be constructed
+// but they do not provide software or pseudocode. We
+// use random initialization which is just as a good for performance testing
+void thorupzhang_init(thorupzhang_t *k) {
+    for (uint32_t i = 0; i < 4; i++) {
+        for (uint32_t j = 0; j < (1 << 16); j++) {
+            k->basetab[i][j][0] = get64rand();
+            k->basetab[i][j][1] = get64rand();
+        }
+    }
+    for (uint32_t i = 0; i < 3; i++) {
+        for (uint32_t j = 0; j < (1 << 16); j++) {
+            k->hashtab[i][j] = get64rand();
+        }
+    }
+}
+
+
+
+static inline uint64_t compress64(uint64_t i) {
+  const uint64_t Mask1 = (((uint64_t)4)<<42) + (((uint64_t)4)<<21) + 4;
+  const uint64_t Mask2 = (((uint64_t)65535)<<42) + (((uint64_t)65535)<<21) + 65535;
+  const uint64_t Mask3 = (((uint64_t)32)<<42) + (((uint64_t)32)<<21) + 31;
+  return Mask1 + (i&Mask2) - ((i>>16)&Mask3);
+} // 5 instructions
+
+uint64_t thorupzhang(uint64_t val, const thorupzhang_t *k) {
+    const uint16_t *s = (const uint16_t *)&val;
+    const uint64_t * A0 = k->basetab[0][s[0]];
+    const uint64_t * A1 = k->basetab[0][s[1]];
+    const uint64_t * A2 = k->basetab[0][s[2]];
+    const uint64_t * A3 = k->basetab[0][s[3]];
+    uint64_t C = compress64(A0[1]+A1[1]+A2[1]+A3[1]);
+    return A0[1] ^ A1[1] ^ A2[1] ^ A3[1]
+      ^ k->hashtab[0][C & 2097151]
+      ^ k->hashtab[1][(C >> 21)&2097151]
+      ^ k->hashtab[2][C >> 42];
+}
+
+
+
+
+typedef struct thorupzhang32_s {
+    uint32_t hashtab[3][1 << 16];
+} thorupzhang32_t;
+
+void thorupzhang32_init(thorupzhang32_t *k) {
+    for (uint32_t i = 0; i < 3; i++) {
+        for (uint32_t j = 0; j < (1 << 16); j++) {
+            k->hashtab[i][j] = get64rand();
+        }
+    }
+}
+
+static inline uint32_t compress32(uint32_t i) {
+  return 2 - (i >> 16) + (i & 0xFFFF);
+}
+
+uint32_t thorupzhang32(uint32_t val, const thorupzhang32_t *k) {
+    uint32_t h = 0;
+    uint32_t lowbits = val & 0xFFFF;
+    uint32_t highbits = val >> 16;
+    h ^= k->hashtab[0][lowbits];
+    h ^= k->hashtab[1][highbits];
+    h ^= k->hashtab[2][compress32(lowbits + highbits)];
+    return h;
+}
+
+
+
 #endif
