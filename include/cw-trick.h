@@ -60,6 +60,19 @@ static inline uint64_t MultAddPrime61(uint32_t x, uint64_t a, uint64_t b) {
     return c;
 }
 
+typedef struct ThorupZhangCWLinear32_s {
+    uint64_t A;
+    uint64_t B;
+} ThorupZhangCWLinear32_t;
+
+
+typedef struct ThorupZhangCWQuadratic32_s {
+    uint64_t A;
+    uint64_t B;
+    uint64_t C;
+} ThorupZhangCWQuadratic32_t;
+
+
 typedef struct ThorupZhangCWCubic32_s {
     uint64_t A;
     uint64_t B;
@@ -67,12 +80,42 @@ typedef struct ThorupZhangCWCubic32_s {
     uint64_t D;
 } ThorupZhangCWCubic32_t;
 
+void ThorupZhangCWLinear32Init(ThorupZhangCWLinear32_t * k) {
+    k->A=get64rand();
+    k->B=get64rand();
+}
+
+
+void ThorupZhangCWQuadratic32Init(ThorupZhangCWQuadratic32_t * k) {
+    k->A=get64rand();
+    k->B=get64rand();
+    k->C=get64rand();
+}
+
 
 void ThorupZhangCWCubic32Init(ThorupZhangCWCubic32_t * k) {
     k->A=get64rand();
     k->B=get64rand();
     k->C=get64rand();
     k->D=get64rand();
+}
+
+/* CWtrick for 32-bit key x with prime 2ˆ61-1 */
+uint32_t ThorupZhangCWLinear32(uint32_t x, const ThorupZhangCWLinear32_t * k) {
+    uint64_t h;
+    h = MultAddPrime61(x,k->A,k->B);
+    h = (h&Prime61)+(h>>61);
+    if (h>=Prime61) h-=Prime61;
+    return h;
+}
+
+/* CWtrick for 32-bit key x with prime 2ˆ61-1 */
+uint32_t ThorupZhangCWQuadratic32(uint32_t x, const ThorupZhangCWQuadratic32_t * k) {
+    uint64_t h;
+    h = MultAddPrime61(MultAddPrime61(x,k->A,k->B),x,k->C);
+    h = (h&Prime61)+(h>>61);
+    if (h>=Prime61) h-=Prime61;
+    return h;
 }
 
 /* CWtrick for 32-bit key x with prime 2ˆ61-1 */
@@ -130,6 +173,16 @@ static inline void MultAddPrime89(INT96 r, uint64_t x, const INT96 a, const INT9
     carry = HIGH(s1);
     r[2] = b[2] + HIGH(d2) + d3 + carry;
 }
+typedef struct ThorupZhangCWLinear64_s {
+    INT96 A;
+    INT96 B;
+} ThorupZhangCWLinear64_t;
+
+typedef struct ThorupZhangCWQuadratic64_s {
+    INT96 A;
+    INT96 B;
+    INT96 C;
+} ThorupZhangCWQuadratic64_t;
 
 typedef struct ThorupZhangCWCubic64_s {
     INT96 A;
@@ -137,6 +190,22 @@ typedef struct ThorupZhangCWCubic64_s {
     INT96 C;
     INT96 D;
 } ThorupZhangCWCubic64_t;
+
+void ThorupZhangCWLinear64Init(ThorupZhangCWLinear64_t * k) {
+    for(int i = 0; i < 3; ++i) {
+        k->A[i]=get64rand();
+        k->B[i]=get64rand();
+    }
+}
+
+void ThorupZhangCWQuadratic64Init(ThorupZhangCWQuadratic64_t * k) {
+    for(int i = 0; i < 3; ++i) {
+        k->A[i]=get64rand();
+        k->B[i]=get64rand();
+        k->C[i]=get64rand();
+    }
+}
+
 
 void ThorupZhangCWCubic64Init(ThorupZhangCWCubic64_t * k) {
     for(int i = 0; i < 3; ++i) {
@@ -146,6 +215,24 @@ void ThorupZhangCWCubic64Init(ThorupZhangCWCubic64_t * k) {
         k->D[i]=get64rand();
     }
 }
+
+
+/* cW trick for 64-bit key x with prime 2ˆ89-1 */
+uint64_t ThorupZhangCWLinear64(uint64_t x, const ThorupZhangCWLinear64_t * k) {
+    INT96 r;
+    MultAddPrime89(r,x,k->A,k->B);
+    return Mod64Prime89(r);
+}
+
+
+/* cW trick for 64-bit key x with prime 2ˆ89-1 */
+uint64_t ThorupZhangCWQuadratic64(uint64_t x, const ThorupZhangCWQuadratic64_t * k) {
+    INT96 r;
+    MultAddPrime89(r,x,k->A,k->B);
+    MultAddPrime89(r,x,r,k->C);
+    return Mod64Prime89(r);
+}
+
 
 /* cW trick for 64-bit key x with prime 2ˆ89-1 */
 uint64_t ThorupZhangCWCubic64(uint64_t x, const ThorupZhangCWCubic64_t * k) {

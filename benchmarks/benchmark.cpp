@@ -140,7 +140,7 @@ struct HashBench {
 };
 
 static const int FIRST_FIELD_WIDTH = 20;
-static const int FIELD_WIDTH = 16;
+static const int FIELD_WIDTH = 10;
 
 static inline uint32_t intlog(uint32_t x) {
   if(x == 0) return 32;
@@ -182,7 +182,7 @@ struct Zobrist64Pack
 
 struct ThorupZhang64Pack
     : public GenericPack<uint64_t, thorupzhang_t, thorupzhang_init, thorupzhang> {
-    static constexpr auto NAME = "ThorupZhang64";
+    static constexpr auto NAME = "TZ64";
 };
 
 struct ZobristTranspose64Pack
@@ -199,17 +199,17 @@ struct ClLinear64Pack
 struct MultiplyShift64Pack
     : public GenericPack<uint64_t, MultiplyShift64Randomness,
                          MultiplyShift64Init, MultiplyShift64> {
-    static constexpr auto NAME = "MultiplyShift64";
+    static constexpr auto NAME = "MS64";
 };
 
 struct ClQuadratic64Pack : public GenericPack<uint64_t, cl_quadratic_t,
                                               cl_quadratic_init, cl_quadratic> {
-    static constexpr auto NAME = "ClQuadratic64";
+    static constexpr auto NAME = "ClQuad64";
 };
 
 struct ClFastQuadratic64Pack : public GenericPack<uint64_t, cl_fastquadratic_t,
                                               cl_fastquadratic_init, cl_fastquadratic> {
-    static constexpr auto NAME = "ClFastQuadratic64";
+    static constexpr auto NAME = "ClFQuad64";
 };
 
 struct ClCubic64Pack
@@ -217,10 +217,19 @@ struct ClCubic64Pack
     static constexpr auto NAME = "ClCubic64";
 };
 
+struct ThorupZhangCWLinear64Pack
+    : public GenericPack<uint64_t, ThorupZhangCWLinear64_t, ThorupZhangCWLinear64Init, ThorupZhangCWLinear64> {
+    static constexpr auto NAME = "TCWLinear64";
+};
+
+struct ThorupZhangCWQuadratic64Pack
+    : public GenericPack<uint64_t, ThorupZhangCWQuadratic64_t, ThorupZhangCWQuadratic64Init, ThorupZhangCWQuadratic64> {
+    static constexpr auto NAME = "TCWQuad64";
+};
 
 struct ThorupZhangCWCubic64Pack
     : public GenericPack<uint64_t, ThorupZhangCWCubic64_t, ThorupZhangCWCubic64Init, ThorupZhangCWCubic64> {
-    static constexpr auto NAME = "ThorupCWCubic64";
+    static constexpr auto NAME = "TCWCubic64";
 };
 
 
@@ -239,7 +248,7 @@ struct Zobrist32Pack
 
 struct ThorupZhang32Pack
     : public GenericPack<uint32_t, thorupzhang32_t, thorupzhang32_init, thorupzhang32> {
-    static constexpr auto NAME = "ThorupZhang32";
+    static constexpr auto NAME = "TZ32";
 };
 
 struct ClLinear32Pack
@@ -251,7 +260,7 @@ struct ClLinear32Pack
 struct MultiplyShift32Pack
     : public GenericPack<uint32_t, MultiplyShift32Randomness,
                          MultiplyShift32Init, MultiplyShift32> {
-    static constexpr auto NAME = "MultiplyShift32";
+    static constexpr auto NAME = "MS32";
 };
 
 struct ClQuadratic32Pack
@@ -263,7 +272,7 @@ struct ClQuadratic32Pack
 struct ClCubic32Pack
     : public GenericPack<uint32_t, cl_cubic_t, cl_cubic32_init,
                          cl_cubic32> {
-    static constexpr auto NAME = "ClCubic32";
+    static constexpr auto NAME = "ClCub32";
 };
 
 struct ClQuartic32Pack
@@ -278,9 +287,19 @@ struct CWQuad32Pack
     static constexpr auto NAME = "CWQuad32";
 };
 
+struct ThorupZhangCWLinear32Pack
+    : public GenericPack<uint32_t, ThorupZhangCWLinear32_t, ThorupZhangCWLinear32Init, ThorupZhangCWLinear32> {
+    static constexpr auto NAME = "TCWLinear32";
+};
+
+struct ThorupZhangCWQuadratic32Pack
+    : public GenericPack<uint32_t, ThorupZhangCWQuadratic32_t, ThorupZhangCWQuadratic32Init, ThorupZhangCWQuadratic32> {
+    static constexpr auto NAME = "TCWQuad32";
+};
+
 struct ThorupZhangCWCubic32Pack
     : public GenericPack<uint32_t, ThorupZhangCWCubic32_t, ThorupZhangCWCubic32Init, ThorupZhangCWCubic32> {
-    static constexpr auto NAME = "ThorupCWCubic32";
+    static constexpr auto NAME = "TCWCub32";
 };
 
 template <typename... Pack> inline void BenchPack(...) { cout << endl; }
@@ -304,7 +323,7 @@ template <typename... Pack> inline void NamePack(...) { cout << endl; }
 
 template <typename Pack, typename... Rest>
 inline void NamePack(typename Pack::Word dummy) {
-    cout << setw(FIELD_WIDTH) << Pack::NAME;
+    cout << setw(FIELD_WIDTH) << string(Pack::NAME).substr (0,FIELD_WIDTH-1);;
     NamePack<Rest...>(dummy);
 }
 
@@ -353,10 +372,10 @@ int main() {
     printf("Keys are flushed at the beginning of each run.\n");
     const vector<uint32_t> sizes{10, 20, 100, 1000, 10000, 100000,1000000};
     basic<Zobrist64Pack, ZobristTranspose64Pack, ThorupZhang64Pack, MultiplyShift64Pack,
-          ClLinear64Pack, ClQuadratic64Pack, ClFastQuadratic64Pack, ClCubic64Pack, ClQuartic64Pack, ThorupZhangCWCubic64Pack>(sizes, repeat);
+          ClLinear64Pack, ClQuadratic64Pack, ClFastQuadratic64Pack, ClCubic64Pack, ClQuartic64Pack, ThorupZhangCWLinear64Pack, ThorupZhangCWQuadratic64Pack, ThorupZhangCWCubic64Pack>(sizes, repeat);
 
     basic<Zobrist32Pack, ThorupZhang32Pack, MultiplyShift32Pack, ClLinear32Pack, ClQuadratic32Pack, ClCubic32Pack,
-          ClQuartic32Pack, CWQuad32Pack, ThorupZhangCWCubic32Pack>(sizes, repeat);
+          ClQuartic32Pack, CWQuad32Pack, ThorupZhangCWLinear32Pack, ThorupZhangCWQuadratic32Pack, ThorupZhangCWCubic32Pack>(sizes, repeat);
 
     printf("Large runs are beneficial to tabulation-based hashing because they "
            "amortize cache faults.\n");
