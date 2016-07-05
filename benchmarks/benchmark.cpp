@@ -207,6 +207,11 @@ struct ClQuadratic64Pack : public GenericPack<uint64_t, cl_quadratic_t,
     static constexpr auto NAME = "ClQuadratic64";
 };
 
+struct ClFastQuadratic64Pack : public GenericPack<uint64_t, cl_fastquadratic_t,
+                                              cl_fastquadratic_init, cl_fastquadratic> {
+    static constexpr auto NAME = "ClFastQuadratic64";
+};
+
 struct ClCubic64Pack
     : public GenericPack<uint64_t, cl_cubic_t, cl_cubic_init, cl_cubic> {
     static constexpr auto NAME = "ClCubic64";
@@ -348,7 +353,7 @@ int main() {
     printf("Keys are flushed at the beginning of each run.\n");
     const vector<uint32_t> sizes{10, 20, 100, 1000, 10000, 100000,1000000};
     basic<Zobrist64Pack, ZobristTranspose64Pack, ThorupZhang64Pack, MultiplyShift64Pack,
-          ClLinear64Pack, ClQuadratic64Pack, ClCubic64Pack, ClQuartic64Pack, ThorupZhangCWCubic64Pack>(sizes, repeat);
+          ClLinear64Pack, ClQuadratic64Pack, ClFastQuadratic64Pack, ClCubic64Pack, ClQuartic64Pack, ThorupZhangCWCubic64Pack>(sizes, repeat);
 
     basic<Zobrist32Pack, ThorupZhang32Pack, MultiplyShift32Pack, ClLinear32Pack, ClQuadratic32Pack, ClCubic32Pack,
           ClQuartic32Pack, CWQuad32Pack, ThorupZhangCWCubic32Pack>(sizes, repeat);

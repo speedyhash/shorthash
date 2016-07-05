@@ -106,6 +106,46 @@ uint64_t cl_quadratic(uint64_t x, const cl_quadratic_t *t) {
     return _mm_cvtsi128_si64(answer);
 }
 
+
+/***
+* Follows a fast version of the quadratic hash
+***/
+
+
+typedef struct cl_fastquadratic_s {
+    __m128i multiplier;
+    __m128i shiftmultiplier;
+    __m128i constant; // high 64-bit should be zero
+} cl_fastquadratic_t;
+
+void cl_fastquadratic_init(cl_fastquadratic_t *k) {
+    k->multiplier = _mm_set_epi64x(get64rand(), get64rand());
+
+    k->constant = _mm_cvtsi64_si128(get64rand());
+
+    // next follows a precomputation
+    __m128i reduc1to64 = reduction64_si128(_mm_set_epi64x(UINT64_C(1), 0));// this is  equivalent to   const __m128i C =
+            //_mm_cvtsi64_si128((1U << 4) + (1U << 3) + (1U << 1) + (1U << 0))
+    __m128i product = _mm_clmulepi64_si128(reduc1to64, k->multiplier, 0x10);
+    k->shiftmultiplier = reduction64_si128(product);
+
+}
+
+// this simply computes   A x^2 + Bx +C modulo
+// should be 3-wise ind.
+uint64_t cl_fastquadratic(uint64_t x, const cl_fastquadratic_t *t) {
+    __m128i inputasvector = _mm_cvtsi64_si128(x);
+    __m128i inputsquare = _mm_clmulepi64_si128(inputasvector, inputasvector, 0x00);
+    __m128i product1 = _mm_clmulepi64_si128(inputasvector, t->multiplier, 0x00);
+    __m128i product2 = _mm_clmulepi64_si128(inputsquare, t->multiplier, 0x10);
+    __m128i product3 = _mm_clmulepi64_si128(inputsquare, t->shiftmultiplier, 0x01);
+    __m128i sum1 = _mm_xor_si128(product1, t->constant);
+    __m128i sum2 = _mm_xor_si128(product2, product3);
+    __m128i sum = _mm_xor_si128(sum1, sum2);
+    __m128i answer = reduction64_si128(sum);
+    return _mm_cvtsi128_si64(answer);
+}
+
 /***
 * Follows a 32-bit quadratic hash
 **/
