@@ -212,6 +212,15 @@ struct ClCubic64Pack
     static constexpr auto NAME = "ClCubic64";
 };
 
+
+struct ThorupZhangCWCubic64Pack
+    : public GenericPack<uint64_t, ThorupZhangCWCubic64_t, ThorupZhangCWCubic64Init, ThorupZhangCWCubic64> {
+    static constexpr auto NAME = "ThorupCWCubic64";
+};
+
+
+
+
 struct ClQuartic64Pack
     : public GenericPack<uint64_t, cl_quartic_t, cl_quartic_init, cl_quartic> {
     static constexpr auto NAME = "ClQuartic64";
@@ -264,6 +273,10 @@ struct CWQuad32Pack
     static constexpr auto NAME = "CWQuad32";
 };
 
+struct ThorupZhangCWCubic32Pack
+    : public GenericPack<uint32_t, ThorupZhangCWCubic32_t, ThorupZhangCWCubic32Init, ThorupZhangCWCubic32> {
+    static constexpr auto NAME = "ThorupCWCubic32";
+};
 
 template <typename... Pack> inline void BenchPack(...) { cout << endl; }
 
@@ -335,10 +348,10 @@ int main() {
     printf("Keys are flushed at the beginning of each run.\n");
     const vector<uint32_t> sizes{10, 20, 100, 1000, 10000, 100000,1000000};
     basic<Zobrist64Pack, ZobristTranspose64Pack, ThorupZhang64Pack, MultiplyShift64Pack,
-          ClLinear64Pack, ClQuadratic64Pack, ClCubic64Pack, ClQuartic64Pack>(sizes, repeat);
+          ClLinear64Pack, ClQuadratic64Pack, ClCubic64Pack, ClQuartic64Pack, ThorupZhangCWCubic64Pack>(sizes, repeat);
 
     basic<Zobrist32Pack, ThorupZhang32Pack, MultiplyShift32Pack, ClLinear32Pack, ClQuadratic32Pack, ClCubic32Pack,
-          ClQuartic32Pack, CWQuad32Pack>(sizes, repeat);
+          ClQuartic32Pack, CWQuad32Pack, ThorupZhangCWCubic32Pack>(sizes, repeat);
 
     printf("Large runs are beneficial to tabulation-based hashing because they "
            "amortize cache faults.\n");
