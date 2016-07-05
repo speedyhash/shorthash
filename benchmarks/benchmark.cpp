@@ -147,7 +147,7 @@ inline timing_stat_t Bench(const typename T::Word *input, uint32_t length, int r
     typename T::Randomness randomness;
     T::InitRandomness(&randomness);
 
-    repeat = std::max(1,repeat / length);
+    repeat = std::max(UINT32_C(1),repeat / length);
     HashBench<typename T::Randomness, typename T::Word, &T::HashFunction> demo(
         input, length, &randomness);
     return BEST_TIME(demo, repeat, length);
