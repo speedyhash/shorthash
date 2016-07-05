@@ -110,7 +110,8 @@ Second Moment Estimation
 
 typedef struct thorupzhang_s {
     uint64_t basetab[4][1 << 16][2];
-    uint64_t hashtab[3][1 << 16];
+    uint64_t hashtab[2][1 << 21];
+    uint64_t finalhashtab[1 << 22];
 } thorupzhang_t;
 
 
@@ -124,10 +125,13 @@ void thorupzhang_init(thorupzhang_t *k) {
             k->basetab[i][j][1] = get64rand();
         }
     }
-    for (uint32_t i = 0; i < 3; i++) {
-        for (uint32_t j = 0; j < (1 << 16); j++) {
+    for (uint32_t i = 0; i < 2; i++) {
+        for (uint32_t j = 0; j < (1 << 21); j++) {
             k->hashtab[i][j] = get64rand();
         }
+    }
+    for (uint32_t j = 0; j < (1 << 22); j++) {
+        k->finalhashtab[j] = get64rand();
     }
 }
 
@@ -138,7 +142,7 @@ static inline uint64_t compress64(uint64_t i) {
   const uint64_t Mask2 = (((uint64_t)65535)<<42) + (((uint64_t)65535)<<21) + 65535;
   const uint64_t Mask3 = (((uint64_t)32)<<42) + (((uint64_t)32)<<21) + 31;
   return Mask1 + (i&Mask2) - ((i>>16)&Mask3);
-} // 5 instructions
+} 
 
 uint64_t thorupzhang(uint64_t val, const thorupzhang_t *k) {
     const uint16_t *s = (const uint16_t *)&val;
@@ -149,8 +153,8 @@ uint64_t thorupzhang(uint64_t val, const thorupzhang_t *k) {
     uint64_t C = compress64(A0[1]+A1[1]+A2[1]+A3[1]);
     return A0[1] ^ A1[1] ^ A2[1] ^ A3[1]
       ^ k->hashtab[0][C & 2097151]
-      ^ k->hashtab[1][(C >> 21)&2097151]
-      ^ k->hashtab[2][C >> 42];
+      ^ k->hashtab[1][(C >> 21) & 2097151]
+      ^ k->finalhashtab[C >> 42];
 }
 
 
