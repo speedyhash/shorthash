@@ -233,6 +233,13 @@ struct ClLinear32Pack
     static constexpr auto NAME = "ClLinear32";
 };
 
+
+struct MultiplyShift32Pack
+    : public GenericPack<uint32_t, MultiplyShift32Randomness,
+                         MultiplyShift32Init, MultiplyShift32> {
+    static constexpr auto NAME = "MultiplyShift32";
+};
+
 struct ClQuadratic32Pack
     : public GenericPack<uint32_t, cl_quadratic_t, cl_quadratic32_init,
                          cl_quadratic32> {
@@ -330,7 +337,7 @@ int main() {
     basic<Zobrist64Pack, ZobristTranspose64Pack, ThorupZhang64Pack, MultiplyShift64Pack,
           ClLinear64Pack, ClQuadratic64Pack, ClCubic64Pack, ClQuartic64Pack>(sizes, repeat);
 
-    basic<Zobrist32Pack, ThorupZhang32Pack, ClLinear32Pack, ClQuadratic32Pack, ClCubic32Pack,
+    basic<Zobrist32Pack, ThorupZhang32Pack, MultiplyShift32Pack, ClLinear32Pack, ClQuadratic32Pack, ClCubic32Pack,
           ClQuartic32Pack, CWQuad32Pack>(sizes, repeat);
 
     printf("Large runs are beneficial to tabulation-based hashing because they "
