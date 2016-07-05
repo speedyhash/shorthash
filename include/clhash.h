@@ -146,6 +146,42 @@ uint64_t cl_fastquadratic(uint64_t x, const cl_fastquadratic_t *t) {
     return _mm_cvtsi128_si64(answer);
 }
 
+
+typedef struct cl_fastquadratic2_s {
+    __m128i A;
+    __m128i B;
+    __m128i multiplier;
+    __m128i shiftmultiplier;
+} cl_fastquadratic2_t;
+
+void cl_fastquadratic2_init(cl_fastquadratic2_t *k) {
+    k->A = _mm_cvtsi64_si128(get64rand());
+    k->B = _mm_cvtsi64_si128(get64rand());
+    k->multiplier = _mm_cvtsi64_si128(get64rand());
+
+    // next follows a precomputation
+    __m128i reduc1to64 = reduction64_si128(_mm_set_epi64x(UINT64_C(1), 0));// this is  equivalent to   const __m128i C =
+            //_mm_cvtsi64_si128((1U << 4) + (1U << 3) + (1U << 1) + (1U << 0))
+    __m128i product = _mm_clmulepi64_si128(reduc1to64, k->multiplier, 0x00);
+    k->shiftmultiplier = reduction64_si128(product);
+
+}
+
+
+// this simply computes   (A + x) * (B + x) * C
+// should be 3-wise ind.
+uint64_t cl_fastquadratic2(uint64_t x, const cl_fastquadratic2_t *t) {
+    __m128i inputasvector = _mm_cvtsi64_si128(x);
+    __m128i sum1 = _mm_xor_si128(inputasvector, t->A);
+    __m128i sum2 = _mm_xor_si128(inputasvector, t->B);
+    __m128i mainproduct = _mm_clmulepi64_si128(sum1, sum2, 0x00);
+    __m128i product1 = _mm_clmulepi64_si128(mainproduct, t->multiplier, 0x00);
+    __m128i product2 = _mm_clmulepi64_si128(mainproduct, t->shiftmultiplier, 0x01);
+    __m128i finalsum = _mm_xor_si128(product1, product2);
+    __m128i answer = reduction64_si128(finalsum);
+    return _mm_cvtsi128_si64(answer);
+}
+
 /***
 * Follows a 32-bit quadratic hash
 **/
