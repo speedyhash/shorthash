@@ -172,6 +172,31 @@ uint32_t cl_quadratic32(uint32_t x, const cl_quadratic_t *t) {
     return _mm_cvtsi128_si32(answer);
 }
 
+typedef struct cl_fastquadratic32_s {
+    __m128i A;
+    __m128i B;
+    __m128i C;
+} cl_fastquadratic32_t;
+
+
+void cl_fastquadratic32_init(cl_fastquadratic32_t *k) {
+    k->A = _mm_cvtsi32_si128(get32rand());
+    k->B = _mm_cvtsi32_si128(get32rand());
+    k->C = _mm_cvtsi32_si128(get32rand());
+}
+
+// C* (A + x ) * ( B + x )
+// should be 3-wise ind.
+uint32_t cl_fastquadratic32(uint32_t x, const cl_fastquadratic32_t *t) {
+    __m128i inputasvector = _mm_cvtsi32_si128(x); // spans 32 bits
+    __m128i s1 = _mm_xor_si128(inputasvector,t->A); // spans 32 bits
+    __m128i s2 = _mm_xor_si128(inputasvector,t->B);// spans 32 bits
+    __m128i product = _mm_clmulepi64_si128(s1,s2,0x00); // spans 64 bits
+    __m128i finalproduct = _mm_clmulepi64_si128(product,t->C,0x00);// spans 96 bits
+    __m128i answer = fastreduction64_si128_for_small_A(finalproduct);
+    return _mm_cvtsi128_si32(answer);
+}
+
 /***
 * Follows a 64-bit cubic hash
 **/
