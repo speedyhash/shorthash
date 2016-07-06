@@ -55,9 +55,9 @@ void basictest(const uint32_t coverage, const uint32_t nbr_keys, const uint32_t 
 int main() {
 
     const uint32_t coverage = 1 << 16;
-    const uint32_t nbr_keys = 1 << 10;
-    const uint32_t mindistinct = 1000;// out of 1024 values, we expect to hit 1000 distinct 16-bit values
-    const int nbr_trials = 1000;
+    const uint32_t nbr_keys = 1 << 11;
+    const uint32_t mindistinct = 95 * nbr_keys / 100;// no more than a 95% collision effect
+    const int nbr_trials = 64;
     bool buggy = false;
     basictest<Zobrist64Pack>(coverage, nbr_keys, mindistinct, nbr_trials, &buggy);
     basictest<WZobrist64Pack>(coverage, nbr_keys, mindistinct, nbr_trials, &buggy);
