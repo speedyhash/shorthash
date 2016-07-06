@@ -126,6 +126,10 @@ struct CWQuad32Pack
     static constexpr auto NAME = "CWQuad32";
 };
 
+struct ThorupZhangCWLinear32Pack
+    : public GenericPack<uint32_t, ThorupZhangCWLinear32_t, ThorupZhangCWLinear32Init, ThorupZhangCWLinear32> {
+    static constexpr auto NAME = "TCWLinear32";
+};
 
 struct ThorupZhangCWQuadratic32Pack
     : public GenericPack<uint32_t, ThorupZhangCWQuadratic32_t, ThorupZhangCWQuadratic32Init, ThorupZhangCWQuadratic32> {
