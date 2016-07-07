@@ -46,6 +46,11 @@ struct ClLinear64Pack
     static constexpr auto NAME = "ClLinear64";
 };
 
+struct ClLinear32Pack
+    : public GenericPack<uint32_t, cl_linear_t, cl_linear_init, cl_linear32> {
+    static constexpr auto NAME = "ClLinear32";
+};
+
 struct MultiplyShift64Pack
     : public GenericPack<uint64_t, MultiplyShift64Randomness,
                          MultiplyShift64Init, MultiplyShift64> {
@@ -60,6 +65,11 @@ struct ClQuadratic64Pack : public GenericPack<uint64_t, cl_quadratic_t,
 struct ClFastQuadratic64Pack : public GenericPack<uint64_t, cl_fastquadratic_t,
                                               cl_fastquadratic_init, cl_fastquadratic> {
     static constexpr auto NAME = "ClFQuad64";
+};
+
+struct ClFastQuadratic32Pack : public GenericPack<uint32_t, cl_fastquadratic32_t,
+                                              cl_fastquadratic32_init, cl_fastquadratic32> {
+    static constexpr auto NAME = "ClFQuad32";
 };
 
 struct ClFast2Quadratic64Pack : public GenericPack<uint64_t, cl_fastquadratic2_t,

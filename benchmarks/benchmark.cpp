@@ -230,8 +230,10 @@ int main() {
     basic<Zobrist64Pack,WZobrist64Pack, ZobristTranspose64Pack, ThorupZhang64Pack, MultiplyShift64Pack,
           ClLinear64Pack, ClQuadratic64Pack, ClFastQuadratic64Pack, ClFast2Quadratic64Pack, ClCubic64Pack, ClQuartic64Pack, ThorupZhangCWLinear64Pack, ThorupZhangCWQuadratic64Pack, ThorupZhangCWCubic64Pack>(sizes, repeat);
 
-    basic<Zobrist32Pack, WZobrist32Pack, ThorupZhang32Pack, MultiplyShift32Pack, CWQuad32Pack, ThorupZhangCWLinear32Pack, ThorupZhangCWQuadratic32Pack, ThorupZhangCWCubic32Pack>(sizes, repeat);
+    basic<Zobrist32Pack, WZobrist32Pack, ThorupZhang32Pack, MultiplyShift32Pack, ClLinear32Pack, ClFastQuadratic32Pack, CWQuad32Pack, ThorupZhangCWLinear32Pack, ThorupZhangCWQuadratic32Pack, ThorupZhangCWCubic32Pack>(sizes, repeat);
 
     printf("Large runs are beneficial to tabulation-based hashing because they "
            "amortize cache faults.\n");
+    printf("The 32-bit CL hash functions generate a pair of 32-bit hash values.\n");
+
 }

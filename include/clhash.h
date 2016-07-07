@@ -35,7 +35,6 @@ static inline __m128i fastreduction64_si128_for_small_A(__m128i A) {
     const __m128i C =
         _mm_cvtsi64_si128((1U << 4) + (1U << 3) + (1U << 1) + (1U << 0));
     __m128i Q2 = _mm_clmulepi64_si128(A, C, 0x01);
-    // assert(_mm_extract_epi64(Q2,1)==0);
     const __m128i final =  _mm_xor_si128(Q2, A);
     return final;
 }
@@ -60,6 +59,18 @@ uint64_t cl_linear(uint64_t x, const cl_linear_t *t) {
     __m128i product = _mm_clmulepi64_si128(inputasvector, t->multiplier, 0x00);
     __m128i productplusconstant = _mm_xor_si128(product, t->constant);
     return _mm_cvtsi128_si64(reduction64_si128(productplusconstant));
+}
+
+// this simply computes A x+B modulo
+//
+// Note: this function really generate a 64-bit value which we cast to the lower
+// 32 bits. It could be used as a joint pair of hash functions.
+//
+uint32_t cl_linear32(uint32_t x, const cl_linear_t *t) {
+    __m128i inputasvector = _mm_cvtsi64_si128(x);
+    __m128i product = _mm_clmulepi64_si128(inputasvector, t->multiplier, 0x00);
+    __m128i productplusconstant = _mm_xor_si128(product, t->constant);
+    return _mm_cvtsi128_si32(fastreduction64_si128_for_small_A(productplusconstant));
 }
 
 
@@ -131,6 +142,34 @@ uint64_t cl_fastquadratic(uint64_t x, const cl_fastquadratic_t *t) {
     return _mm_cvtsi128_si64(answer);
 }
 
+
+typedef struct cl_fastquadratic32_s {
+    __m128i multiplier;
+    __m128i constant; // high 64-bit should be zero
+} cl_fastquadratic32_t;
+
+void cl_fastquadratic32_init(cl_fastquadratic32_t *k) {
+    k->multiplier = _mm_set_epi64x(get64rand(), get64rand());
+    k->constant = _mm_cvtsi64_si128(get64rand());
+
+}
+
+
+// this simply computes   A x^2 + Bx +C modulo
+// should be 3-wise ind.
+//
+// Note: this function really generate a 64-bit value which we cast to the lower
+// 32 bits. It could be used as a joint pair of hash functions.
+uint32_t cl_fastquadratic32(uint32_t x, const cl_fastquadratic32_t *t) {
+    __m128i inputasvector = _mm_cvtsi64_si128(x);
+    __m128i inputsquare = _mm_clmulepi64_si128(inputasvector, inputasvector, 0x00);
+    __m128i product1 = _mm_clmulepi64_si128(inputasvector, t->multiplier, 0x00);
+    __m128i product2 = _mm_clmulepi64_si128(inputsquare, t->multiplier, 0x10);
+    __m128i sum1 = _mm_xor_si128(product1, t->constant);
+    __m128i sum = _mm_xor_si128(sum1, product2);
+    __m128i answer = reduction64_si128(sum);
+    return _mm_cvtsi128_si32(answer);
+}
 
 typedef struct cl_fastquadratic2_s {
     __m128i A;

@@ -76,6 +76,8 @@ int main() {
     basictest<Zobrist32Pack>(coverage, nbr_keys, mindistinct, nbr_trials, &buggy);
     basictest<WZobrist32Pack>(coverage, nbr_keys, mindistinct, nbr_trials, &buggy);
     basictest<MultiplyShift32Pack>(coverage, nbr_keys, mindistinct, nbr_trials, &buggy);
+    basictest<ClLinear32Pack>(coverage, nbr_keys, mindistinct, nbr_trials, &buggy);
+    basictest<ClFastQuadratic32Pack>(coverage, nbr_keys, mindistinct, nbr_trials, &buggy);
     basictest<CWQuad32Pack>(coverage, nbr_keys, mindistinct, nbr_trials, &buggy);
     basictest<ThorupZhangCWLinear32Pack>(coverage, nbr_keys, mindistinct, nbr_trials, &buggy);
     basictest<ThorupZhangCWQuadratic32Pack>(coverage, nbr_keys, mindistinct, nbr_trials, &buggy);
