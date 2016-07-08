@@ -17,7 +17,8 @@ void zobrist_init(zobrist_t *k) {
     }
 }
 
-uint64_t zobrist(uint64_t val, const zobrist_t *k) {
+__attribute__((always_inline))
+inline uint64_t zobrist(uint64_t val, const zobrist_t *k) {
     uint64_t h = 0;
     const unsigned char *s = (const unsigned char *)&val;
     h ^= k->hashtab[0][s[0]];
@@ -45,7 +46,8 @@ void wzobrist_init(wzobrist_t *k) {
     }
 }
 
-uint64_t wzobrist(uint64_t val, const wzobrist_t *k) {
+__attribute__((always_inline))
+inline uint64_t wzobrist(uint64_t val, const wzobrist_t *k) {
     uint64_t h = 0;
     const uint16_t *s = (const uint16_t *)&val;
     h ^= k->hashtab[0][s[0]];
@@ -67,7 +69,8 @@ void zobrist_flat_init(zobrist_flat_t *k) {
   }
 }
 
-uint64_t zobrist_flat(uint64_t val, const zobrist_flat_t *k) {
+__attribute__((always_inline))
+inline uint64_t zobrist_flat(uint64_t val, const zobrist_flat_t *k) {
     uint64_t h = 0;
     const unsigned char *s = (const unsigned char *)&val;
     h ^= k->hashtab[s[0]];
@@ -83,7 +86,8 @@ uint64_t zobrist_flat(uint64_t val, const zobrist_flat_t *k) {
 
 // The same as zobrist_flat, but treats the array as if the two
 // dimensions were flipped in their order.
-uint64_t zobrist_flat_transpose(uint64_t val, const zobrist_flat_t *k) {
+__attribute__((always_inline))
+inline uint64_t zobrist_flat_transpose(uint64_t val, const zobrist_flat_t *k) {
     uint64_t h = 0;
     const unsigned char *s = (const unsigned char *)&val;
     h ^= k->hashtab[s[0]];
@@ -109,7 +113,8 @@ void zobrist32_init(zobrist32_t *k) {
     }
 }
 
-uint32_t zobrist32(uint32_t val, const zobrist32_t *k) {
+__attribute__((always_inline))
+inline uint32_t zobrist32(uint32_t val, const zobrist32_t *k) {
     uint32_t h = 0;
     const unsigned char *s = (const unsigned char *)&val;
     h ^= k->hashtab[0][s[0]];
@@ -131,7 +136,8 @@ void wzobrist32_init(wzobrist32_t *k) {
     }
 }
 
-uint32_t wzobrist32(uint32_t val, const wzobrist32_t *k) {
+__attribute__((always_inline))
+inline uint32_t wzobrist32(uint32_t val, const wzobrist32_t *k) {
     uint32_t h = 0;
     const uint16_t *s = (const uint16_t *)&val;
     h ^= k->hashtab[0][s[0]];

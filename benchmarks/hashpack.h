@@ -17,6 +17,8 @@ public:
     static inline void InitRandomness(Randomness *r) {
         InitRandomnessP(r);
     }
+
+    __attribute__((always_inline))
     static inline Word HashFunction(Word x, const Randomness *r) {
         return HashFunctionP(x, r);
     }
@@ -35,8 +37,8 @@ public:
     }
 
 
-
-    size_t operator()(Word x) const {
+    __attribute__((always_inline))
+    inline size_t operator()(Word x) const {
         return HashFunction(x,myr.get());
     }
 private:

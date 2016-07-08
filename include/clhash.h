@@ -13,6 +13,7 @@
 
 // modulo reduction to 64-bit value. The high 64 bits contain garbage, call
 // _mm_cvtsi128_si64 to extract the meaningful 64-bit
+__attribute__((always_inline))
 static inline __m128i reduction64_si128(__m128i A) {
     // C is the irreducible poly. (64,4,3,1,0)
     // const __m128i C = _mm_set_epi64x(1U,(1U<<4)+(1U<<3)+(1U<<1)+(1U<<0));
@@ -31,6 +32,7 @@ static inline __m128i reduction64_si128(__m128i A) {
 
 // same as reduction64_si128 but assumes that the upper bits of A are zero (say
 // the most significant 32 bits) useful for 32-bit hash functions
+__attribute__((always_inline))
 static inline __m128i fastreduction64_si128_for_small_A(__m128i A) {
     const __m128i C =
         _mm_cvtsi64_si128((1U << 4) + (1U << 3) + (1U << 1) + (1U << 0));
@@ -54,7 +56,8 @@ void cl_linear_init(cl_linear_t *k) {
 }
 
 // this simply computes A x+B modulo
-uint64_t cl_linear(uint64_t x, const cl_linear_t *t) {
+__attribute__((always_inline))
+inline uint64_t cl_linear(uint64_t x, const cl_linear_t *t) {
     __m128i inputasvector = _mm_cvtsi64_si128(x);
     __m128i product = _mm_clmulepi64_si128(inputasvector, t->multiplier, 0x00);
     __m128i productplusconstant = _mm_xor_si128(product, t->constant);
@@ -66,7 +69,8 @@ uint64_t cl_linear(uint64_t x, const cl_linear_t *t) {
 // Note: this function really generate a 64-bit value which we cast to the lower
 // 32 bits. It could be used as a joint pair of hash functions.
 //
-uint32_t cl_linear32(uint32_t x, const cl_linear_t *t) {
+__attribute__((always_inline))
+inline uint32_t cl_linear32(uint32_t x, const cl_linear_t *t) {
     __m128i inputasvector = _mm_cvtsi64_si128(x);
     __m128i product = _mm_clmulepi64_si128(inputasvector, t->multiplier, 0x00);
     __m128i productplusconstant = _mm_xor_si128(product, t->constant);
@@ -90,7 +94,8 @@ void cl_quadratic_init(cl_quadratic_t *k) {
 
 // this simply computes   A x^2 + Bx +C modulo
 // should be 3-wise ind.
-uint64_t cl_quadratic(uint64_t x, const cl_quadratic_t *t) {
+__attribute__((always_inline))
+inline uint64_t cl_quadratic(uint64_t x, const cl_quadratic_t *t) {
     __m128i inputasvector = _mm_cvtsi64_si128(x);
     __m128i inputsquare = reduction64_si128(
         _mm_clmulepi64_si128(inputasvector, inputasvector, 0x00));
@@ -129,7 +134,8 @@ void cl_fastquadratic_init(cl_fastquadratic_t *k) {
 
 // this simply computes   A x^2 + Bx +C modulo
 // should be 3-wise ind.
-uint64_t cl_fastquadratic(uint64_t x, const cl_fastquadratic_t *t) {
+__attribute__((always_inline))
+inline uint64_t cl_fastquadratic(uint64_t x, const cl_fastquadratic_t *t) {
     __m128i inputasvector = _mm_cvtsi64_si128(x);
     __m128i inputsquare = _mm_clmulepi64_si128(inputasvector, inputasvector, 0x00);
     __m128i product1 = _mm_clmulepi64_si128(inputasvector, t->multiplier, 0x00);
@@ -160,7 +166,8 @@ void cl_fastquadratic32_init(cl_fastquadratic32_t *k) {
 //
 // Note: this function really generate a 64-bit value which we cast to the lower
 // 32 bits. It could be used as a joint pair of hash functions.
-uint32_t cl_fastquadratic32(uint32_t x, const cl_fastquadratic32_t *t) {
+__attribute__((always_inline))
+inline uint32_t cl_fastquadratic32(uint32_t x, const cl_fastquadratic32_t *t) {
     __m128i inputasvector = _mm_cvtsi64_si128(x);
     __m128i inputsquare = _mm_clmulepi64_si128(inputasvector, inputasvector, 0x00);
     __m128i product1 = _mm_clmulepi64_si128(inputasvector, t->multiplier, 0x00);
@@ -194,7 +201,8 @@ void cl_fastquadratic2_init(cl_fastquadratic2_t *k) {
 
 // this simply computes   (A + x) * (B + x) * C
 // should be 3-wise ind.
-uint64_t cl_fastquadratic2(uint64_t x, const cl_fastquadratic2_t *t) {
+__attribute__((always_inline))
+inline uint64_t cl_fastquadratic2(uint64_t x, const cl_fastquadratic2_t *t) {
     __m128i inputasvector = _mm_cvtsi64_si128(x);
     __m128i sum1 = _mm_xor_si128(inputasvector, t->A);
     __m128i sum2 = _mm_xor_si128(inputasvector, t->B);
@@ -224,7 +232,8 @@ void cl_cubic_init(cl_cubic_t *k) {
 
 // this simply computes   A x^3 + B x^2 + C x + D modulo
 // should be 4-wise ind.
-uint64_t cl_cubic(uint64_t x, const cl_cubic_t *t) {
+__attribute__((always_inline))
+inline uint64_t cl_cubic(uint64_t x, const cl_cubic_t *t) {
     __m128i inputasvector = _mm_cvtsi64_si128(x);
     __m128i inputsquare = reduction64_si128(
         _mm_clmulepi64_si128(inputasvector, inputasvector, 0x00));
@@ -261,7 +270,8 @@ void cl_quartic_init(cl_quartic_t *k) {
 
 // this simply computes  A x^4 + B x^3 + c x^2 + D x + E modulo
 // should be 5-wise ind.
-uint64_t cl_quartic(uint64_t x, const cl_quartic_t *t) {
+__attribute__((always_inline))
+inline uint64_t cl_quartic(uint64_t x, const cl_quartic_t *t) {
     __m128i inputasvector = _mm_cvtsi64_si128(x);
     __m128i inputsquare = reduction64_si128(
         _mm_clmulepi64_si128(inputasvector, inputasvector, 0x00));

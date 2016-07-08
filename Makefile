@@ -15,7 +15,7 @@ endif # debug
 CFLAGS = $(FLAGS) -std=c99
 CXXFLAGS = $(FLAGS) -std=c++11
 
-all: benchmark.exe htbenchmark.exe cw-trick-test.exe collision-test.exe $(OBJECTS)
+all: benchmark.exe htbenchmark.exe bucketbenchmark.exe cw-trick-test.exe collision-test.exe $(OBJECTS)
 
 HEADERS = include/clhash.h include/tabulated.h include/util.h \
     include/multiply-shift.h include/cw-trick.h benchmarks/hashpack.h \
@@ -26,6 +26,9 @@ benchmark.exe: ./benchmarks/benchmark.cpp $(HEADERS)
 
 
 htbenchmark.exe: ./benchmarks/htbenchmark.cpp $(HEADERS)
+	$(CXX) $(CXXFLAGS) -o $@ $< -Iinclude
+
+bucketbenchmark.exe: ./benchmarks/bucketbenchmark.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -o $@ $< -Iinclude
 
 

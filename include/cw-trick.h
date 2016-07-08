@@ -23,7 +23,8 @@ void CWRandomQuad32Init(CWRandomQuad32 * x) {
     x->c = get32rand();
 }
 
-uint32_t CWQuad32(uint32_t x, const CWRandomQuad32 * r) {
+__attribute__((always_inline))
+inline uint32_t CWQuad32(uint32_t x, const CWRandomQuad32 * r) {
     uint64_t ax = ((uint64_t)r->a) * ((uint64_t)x);      // 64 bits
     uint128_t axb = ((uint128_t)ax) + ((uint128_t)r->b); // 65 bits
     uint128_t axbx = axb * ((uint128_t)x);            // 97 bits
@@ -101,7 +102,8 @@ void ThorupZhangCWCubic32Init(ThorupZhangCWCubic32_t * k) {
 }
 
 /* CWtrick for 32-bit key x with prime 2ˆ61-1 */
-uint32_t ThorupZhangCWLinear32(uint32_t x, const ThorupZhangCWLinear32_t * k) {
+__attribute__((always_inline))
+inline uint32_t ThorupZhangCWLinear32(uint32_t x, const ThorupZhangCWLinear32_t * k) {
     uint64_t h;
     h = MultAddPrime61(x,k->A,k->B);
     h = (h&Prime61)+(h>>61);
@@ -110,7 +112,8 @@ uint32_t ThorupZhangCWLinear32(uint32_t x, const ThorupZhangCWLinear32_t * k) {
 }
 
 /* CWtrick for 32-bit key x with prime 2ˆ61-1 */
-uint32_t ThorupZhangCWQuadratic32(uint32_t x, const ThorupZhangCWQuadratic32_t * k) {
+__attribute__((always_inline))
+inline uint32_t ThorupZhangCWQuadratic32(uint32_t x, const ThorupZhangCWQuadratic32_t * k) {
     uint64_t h;
     h = MultAddPrime61(MultAddPrime61(x,k->A,k->B),x,k->C);
     h = (h&Prime61)+(h>>61);
@@ -119,7 +122,8 @@ uint32_t ThorupZhangCWQuadratic32(uint32_t x, const ThorupZhangCWQuadratic32_t *
 }
 
 /* CWtrick for 32-bit key x with prime 2ˆ61-1 */
-uint32_t ThorupZhangCWCubic32(uint32_t x, const ThorupZhangCWCubic32_t * k) {
+__attribute__((always_inline))
+inline uint32_t ThorupZhangCWCubic32(uint32_t x, const ThorupZhangCWCubic32_t * k) {
     uint64_t h;
     h = MultAddPrime61(MultAddPrime61(MultAddPrime61(x,k->A,k->B),x,k->C),x,k->D);
     h = (h&Prime61)+(h>>61);
@@ -191,14 +195,16 @@ typedef struct ThorupZhangCWCubic64_s {
     INT96 D;
 } ThorupZhangCWCubic64_t;
 
-void ThorupZhangCWLinear64Init(ThorupZhangCWLinear64_t * k) {
+__attribute__((always_inline))
+inline void ThorupZhangCWLinear64Init(ThorupZhangCWLinear64_t * k) {
     for(int i = 0; i < 3; ++i) {
         k->A[i]=get64rand();
         k->B[i]=get64rand();
     }
 }
 
-void ThorupZhangCWQuadratic64Init(ThorupZhangCWQuadratic64_t * k) {
+__attribute__((always_inline))
+inline void ThorupZhangCWQuadratic64Init(ThorupZhangCWQuadratic64_t * k) {
     for(int i = 0; i < 3; ++i) {
         k->A[i]=get64rand();
         k->B[i]=get64rand();
@@ -207,7 +213,8 @@ void ThorupZhangCWQuadratic64Init(ThorupZhangCWQuadratic64_t * k) {
 }
 
 
-void ThorupZhangCWCubic64Init(ThorupZhangCWCubic64_t * k) {
+__attribute__((always_inline))
+inline void ThorupZhangCWCubic64Init(ThorupZhangCWCubic64_t * k) {
     for(int i = 0; i < 3; ++i) {
         k->A[i]=get64rand();
         k->B[i]=get64rand();
@@ -218,7 +225,8 @@ void ThorupZhangCWCubic64Init(ThorupZhangCWCubic64_t * k) {
 
 
 /* cW trick for 64-bit key x with prime 2ˆ89-1 */
-uint64_t ThorupZhangCWLinear64(uint64_t x, const ThorupZhangCWLinear64_t * k) {
+__attribute__((always_inline))
+inline uint64_t ThorupZhangCWLinear64(uint64_t x, const ThorupZhangCWLinear64_t * k) {
     INT96 r;
     MultAddPrime89(r,x,k->A,k->B);
     return Mod64Prime89(r);
@@ -226,7 +234,8 @@ uint64_t ThorupZhangCWLinear64(uint64_t x, const ThorupZhangCWLinear64_t * k) {
 
 
 /* cW trick for 64-bit key x with prime 2ˆ89-1 */
-uint64_t ThorupZhangCWQuadratic64(uint64_t x, const ThorupZhangCWQuadratic64_t * k) {
+__attribute__((always_inline))
+inline uint64_t ThorupZhangCWQuadratic64(uint64_t x, const ThorupZhangCWQuadratic64_t * k) {
     INT96 r;
     MultAddPrime89(r,x,k->A,k->B);
     MultAddPrime89(r,x,r,k->C);
@@ -235,7 +244,8 @@ uint64_t ThorupZhangCWQuadratic64(uint64_t x, const ThorupZhangCWQuadratic64_t *
 
 
 /* cW trick for 64-bit key x with prime 2ˆ89-1 */
-uint64_t ThorupZhangCWCubic64(uint64_t x, const ThorupZhangCWCubic64_t * k) {
+__attribute__((always_inline))
+inline uint64_t ThorupZhangCWCubic64(uint64_t x, const ThorupZhangCWCubic64_t * k) {
     INT96 r;
     MultAddPrime89(r,x,k->A,k->B);
     MultAddPrime89(r,x,r,k->C);

@@ -18,7 +18,8 @@ void MultiplyShift64Init(MultiplyShift64Randomness *x) {
   x->add = get128rand();
 }
 
-uint64_t MultiplyShift64(uint64_t in, const MultiplyShift64Randomness * rand) {
+__attribute__((always_inline))
+inline uint64_t MultiplyShift64(uint64_t in, const MultiplyShift64Randomness * rand) {
   return ((((uint128_t)in) * rand->mult) + rand->add) >> 64;
 }
 
@@ -32,7 +33,8 @@ void MultiplyShift32Init(MultiplyShift32Randomness *x) {
   x->add = get64rand();
 }
 
-uint32_t MultiplyShift32(uint32_t in, const MultiplyShift32Randomness * rand) {
+__attribute__((always_inline))
+inline uint32_t MultiplyShift32(uint32_t in, const MultiplyShift32Randomness * rand) {
   return ((((uint64_t)in) * rand->mult) + rand->add) >> 32;
 }
 
