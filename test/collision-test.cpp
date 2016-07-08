@@ -42,7 +42,7 @@ void basictest(const uint32_t coverage, const uint32_t nbr_keys, const uint32_t 
 
     }
     delete randomness;
-    delete bitset;
+    delete[] bitset;
     if( mincount < mindistinct) {
       std::cout << string(Pack::NAME) << " got a distinct count of "<< mincount << " hash values in  [0, "<< coverage <<" ) out of " << nbr_keys << " keys "<< std::endl;
       *buggy = true;
