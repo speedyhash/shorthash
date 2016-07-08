@@ -74,23 +74,29 @@ void basic(std::vector<uint64_t> & keys,  const float loadfactor, const int repe
     size_t howmany = keys.size();
     std::cout << "testing "  << setw(20) << string(Pack::NAME) << " ";
     std::cout.flush();
+    uint64_t sum = 0;
+    vector <HashMap<uint64_t, uint32_t, Pack> > collection;
+    uint64_t  cycles_start, cycles_end;
     for(int r = 0 ; r < repeat; ++r) {
-
         HashMap<uint64_t, uint32_t, Pack> hm(16, EMPTY, loadfactor);
-        uint64_t  cycles_start, cycles_end;
         cycles_start = RDTSC_START();
         populate(hm,keys);
         cycles_end = RDTSC_FINAL();
+        collection.push_back(hm);
+    }
+    for(int r = 0 ; r < repeat; ++r) {
+        HashMap<uint64_t, uint32_t, Pack> & hm = collection[r];
         cycles_start = RDTSC_START();
-        query(hm,keys);
+        sum += query(hm,keys);
         cycles_end = RDTSC_FINAL();
         querycycles += (cycles_end - cycles_start) * 1.0 / howmany;
 
         double pk = query_avg_probed_keys(hm,keys);
         probespercycle += pk;
-    }
-    std::cout << "     " << setw(10) << querycycles / repeat << " cycles per query on average " ;
+     }
+     std::cout << "     " << setw(10) << querycycles / repeat << " cycles per query on average " ;
     std::cout << "     " << setw(10) << probespercycle / repeat << " probes per query on average " ;
+    std::cout << " ignore me: " << sum ;
     std::cout << std::endl;
 
 }
@@ -144,10 +150,11 @@ void demofixed(const uint64_t howmany) {
 
 
 int main() {
+    demorandom(1000);
     demorandom(2000);
     demorandom(64000);
 
+    demofixed(1000);
     demofixed(2000);
     demofixed(64000);
-
 }
