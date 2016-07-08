@@ -124,7 +124,7 @@ void demofixed(const uint64_t howmany) {
     const float repeat = 1000;
     std::vector<uint64_t>  keys;
     for(uint64_t i = 1; i <= howmany; ++i) {
-        keys.push_back(i + 99999);
+        keys.push_back(i + UINT64_C(0xFFFFFFFFF));
     }
     std::cout << "populating a hash table with " << howmany << " sequential 64-bit keys and then retrieving them. " << std::endl;
     std::cout << "load factor = " << loadfactor << std::endl;
