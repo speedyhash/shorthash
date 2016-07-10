@@ -64,13 +64,23 @@ double query_avg_probed_keys(ht & h, vector<uint64_t> & keys) {
     return sum * 1.0 / keys.size();
 }
 
+template <typename ht>
+size_t query_max_probed_keys(ht & h, vector<uint64_t> & keys) {
+    size_t mp = 0;
+    for(size_t i = 0; i < keys.size(); ++i) {
+        size_t tp = h.probed_keys(keys[i]);
+        if(tp > mp) mp = tp;
+    }
+    return mp;
+}
 const uint64_t EMPTY = 0xFFFFFFFFFFFFFFFF;
 
 
 template <typename Pack>
 void basic(std::vector<uint64_t> & keys,  const float loadfactor, const int repeat) {
     double querycycles = 0;
-    double probespercycle = 0;
+    double probesperquery = 0;
+    double maxprobesperquery = 0;
     size_t howmany = keys.size();
     std::cout << "testing "  << setw(20) << string(Pack::NAME) << " ";
     std::cout.flush();
@@ -92,22 +102,25 @@ void basic(std::vector<uint64_t> & keys,  const float loadfactor, const int repe
         querycycles += (cycles_end - cycles_start) * 1.0 / howmany;
 
         double pk = query_avg_probed_keys(hm,keys);
-        probespercycle += pk;
-     }
-     std::cout << "     " << setw(10) << querycycles / repeat << " cycles per query on average " ;
-    std::cout << "     " << setw(10) << probespercycle / repeat << " probes per query on average " ;
+        double mk = query_max_probed_keys(hm,keys);
+        probesperquery += pk;
+        maxprobesperquery += mk;
+    }
+    std::cout << "     " << setw(10) << querycycles / repeat << " cycles per query on average " ;
+    std::cout << "     " << setw(10) << probesperquery / repeat << " probes per query on average " ;
+    std::cout << "     " << setw(10) << maxprobesperquery / repeat << " max probes per query on average " ;
     std::cout << " ignore me: " << sum ;
     std::cout << std::endl;
 
 }
 
-void demorandom(const uint64_t howmany) {
+void demorandom(const uint64_t howmany, const float loadfactor, const float repeat) {
     srand(0);
-    const float loadfactor = 0.9;
-    const float repeat = 1000;
     std::vector<uint64_t>  keys;
     for(uint64_t i = 1; i <= howmany; ++i) {
-        keys.push_back(get64rand());// formally, we should make sure that the key differs from EMPTY
+      uint64_t newkey = get64rand();
+      while(newkey == EMPTY) newkey = get64rand();
+      keys.push_back(newkey);
     }
     std::cout << "populating a hash table with " << howmany << " random 64-bit keys and then retrieving them. " << std::endl;
     std::cout << "load factor = " << loadfactor << std::endl;
@@ -124,10 +137,8 @@ void demorandom(const uint64_t howmany) {
 
 }
 
-void demofixed(const uint64_t howmany) {
+void demofixed(const uint64_t howmany, const float loadfactor, const float repeat) {
     srand(0);
-    const float loadfactor = 0.9;
-    const float repeat = 1000;
     std::vector<uint64_t>  keys;
     for(uint64_t i = 1; i <= howmany; ++i) {
         keys.push_back(i + UINT64_C(0xFFFFFFFFF));
@@ -150,11 +161,14 @@ void demofixed(const uint64_t howmany) {
 
 
 int main() {
-    demorandom(1000);
-    demorandom(2000);
-    demorandom(64000);
+    const float loadfactor = 0.9;
+    const float repeat = 1000;
 
-    demofixed(1000);
-    demofixed(2000);
-    demofixed(64000);
+    demorandom(1000, loadfactor, repeat);
+    demorandom(2000, loadfactor, repeat);
+    demorandom(64000, loadfactor, repeat);
+
+    demofixed(1000, loadfactor, repeat);
+    demofixed(2000, loadfactor, repeat);
+    demofixed(64000, loadfactor, repeat);
 }

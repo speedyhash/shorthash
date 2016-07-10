@@ -160,6 +160,7 @@ public:
 
     template <typename... Args>
     std::pair<iterator, bool> emplace(key_type key, Args &&... args) {
+        if(key == empty_key_) throw std::runtime_error("can't use the empty key.");
         reserve(size_ + 1);
         for (size_t idx = key_to_idx(key);; idx = probe_next(idx)) {
             if (buckets_[idx].first == empty_key_) {
@@ -227,6 +228,7 @@ public:
     }
 
     iterator find(key_type key) {
+        if(key == empty_key_) throw std::runtime_error("can't seek the empty key.");
         for (size_t idx = key_to_idx(key);; idx = probe_next(idx)) {
             if (buckets_[idx].first == key) {
                 return iterator(this, idx);
