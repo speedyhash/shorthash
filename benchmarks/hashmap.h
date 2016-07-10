@@ -92,25 +92,25 @@ public:
     using const_iterator = hm_iterator<const HashMap, const value_type>;
 
 public:
-    HashMap(size_type bucket_count, key_type empty_key, float loadFactor) : empty_key_(empty_key), loadFactor_(loadFactor) {
+    HashMap(size_type bucket_count_var, key_type empty_key, float loadFactor) : empty_key_(empty_key), loadFactor_(loadFactor) {
         size_t pow2 = 1;
-        while (pow2 < bucket_count) {
+        while (pow2 < bucket_count_var) {
             pow2 <<= 1;
         }
         buckets_.resize(pow2, std::make_pair(empty_key_, T()));
     }
 
-    HashMap(size_type bucket_count, key_type empty_key, float loadFactor, hasher h)
+    HashMap(size_type bucket_count_var, key_type empty_key, float loadFactor, hasher h)
         : empty_key_(empty_key), loadFactor_(loadFactor), hasher_(h) {
         size_t pow2 = 1;
-        while (pow2 < bucket_count) {
+        while (pow2 < bucket_count_var) {
             pow2 <<= 1;
         }
         buckets_.resize(pow2, std::make_pair(empty_key_, T()));
     }
 
-    HashMap(const HashMap &other, size_type bucket_count)
-        : HashMap(bucket_count, other.empty_key_, other.loadFactor_, other.hasher_) {
+    HashMap(const HashMap &other, size_type bucket_count_var)
+        : HashMap(bucket_count_var, other.empty_key_, other.loadFactor_, other.hasher_) {
         for (auto it = other.begin(); it != other.end(); ++it) {
             insert(*it);
         }
@@ -263,15 +263,15 @@ public:
     }
 
     // Hash policy
-    void rehash(size_type count) {
-        count = std::max(count, size());
-        HashMap other(*this, count);
+    void rehash(size_type count_var) {
+        count_var = std::max(count_var, size());
+        HashMap other(*this, count_var);
         swap(other);
     }
 
-    void reserve(size_type count) {
-        if (count > buckets_.size() ) {
-            rehash( count /  loadFactor_ + 1);
+    void reserve(size_type count_var) {
+        if (count_var > buckets_.size() ) {
+            rehash( count_var /  loadFactor_ + 1);
         }
     }
 
