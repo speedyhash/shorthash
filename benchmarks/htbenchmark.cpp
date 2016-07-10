@@ -174,11 +174,16 @@ int main() {
     const float loadfactor = 0.9;
     const float repeat = 1000;
 
-    demorandom(1000, loadfactor, repeat);
-    demorandom(2000, loadfactor, repeat);
-    demorandom(64000, loadfactor, repeat);
-
     demofixed(1000, loadfactor, repeat);
     demofixed(2000, loadfactor, repeat);
     demofixed(64000, loadfactor, repeat);
+    demofixed(120000, loadfactor, repeat);
+
+    std::cout << "=======" << std::endl;
+
+    demorandom(1000, loadfactor, repeat);
+    demorandom(2000, loadfactor, repeat);
+    demorandom(64000, loadfactor, repeat);
+    demorandom(120000, loadfactor, repeat);
+
 }

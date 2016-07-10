@@ -35,18 +35,22 @@ void basic(std::vector<uint64_t> & keys, uint64_t N  , const int repeat) {
     uint8_t *  bitset = new uint8_t[howmanychars];
 
     uint64_t probing_offset = 0;
+    uint64_t max_probing_offset = 0;
+
     uint64_t probing_offset_square = 0;
     for(int r = 0 ; r < repeat; ++r) {
         memset(bitset,0, N/8);
         Pack p;
         for(uint32_t k = 0 ; k < howmany; ++k)  {
              uint32_t result = p(keys[k]) % N;
-            size_t thisoffset = 1; // always one probe
+            size_t thisoffset = 1; // always one prob
             while((bitset[result/ 8] & (1 << (result % 8))) != 0 ) {
               result ++;
               thisoffset++;
               if (result == N) result = 0;
             }
+            assert(thisoffset <= N);
+            if(thisoffset > max_probing_offset) max_probing_offset = thisoffset;
             probing_offset += thisoffset;
             probing_offset_square += thisoffset * thisoffset;
             bitset[result / 8] |= (1 << (result % 8));
@@ -61,6 +65,8 @@ void basic(std::vector<uint64_t> & keys, uint64_t N  , const int repeat) {
     double std_err = sqrt(probing_offset_square / values_stored - average_prob * average_prob);
 
     std::cout << "  std error  =   " << setw(10) <<  std_err;
+    std::cout << "  max probing  =   " << setw(10) <<  max_probing_offset;
+
     delete[] bitset;
 
     std::cout << std::endl;
@@ -115,25 +121,21 @@ void demofixed(const uint64_t howmany, const float loadfactor, const int repeat)
 
 
 int main() {
-    float loadfactor = 0.98;
+    float loadfactor = 0.95;
     std::cout << "load factor set at " << loadfactor <<  std::endl;
     const int repeat = 1000;
-    demorandom(1000, loadfactor, repeat);
-    demorandom(2000, loadfactor, repeat);
-    demorandom(4000, loadfactor, repeat);
-    demorandom(8000, loadfactor, repeat);
-    demorandom(16000, loadfactor, repeat);
-    demorandom(32000, loadfactor, repeat);
-    demorandom(64000, loadfactor, repeat);
-    demorandom(128000, loadfactor, repeat);
 
     demofixed(1000, loadfactor, repeat);
     demofixed(2000, loadfactor, repeat);
-    demofixed(4000, loadfactor, repeat);
-    demofixed(8000, loadfactor, repeat);
-    demofixed(16000, loadfactor, repeat);
-    demofixed(32000, loadfactor, repeat);
     demofixed(64000, loadfactor, repeat);
-    demofixed(128000, loadfactor, repeat);
+    demofixed(120000, loadfactor, repeat);
+
+    std::cout << "=======" << std::endl;
+
+    demorandom(1000, loadfactor, repeat);
+    demorandom(2000, loadfactor, repeat);
+    demorandom(64000, loadfactor, repeat);
+    demorandom(120000, loadfactor, repeat);
+
 
 }
