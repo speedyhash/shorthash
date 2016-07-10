@@ -283,19 +283,34 @@ public:
     }
 
 private:
+
     size_t key_to_idx(key_type key) const {
-        const size_t mask = buckets_.size() - 1;
-        return hasher_(key) & mask;
+        /* was:  const size_t mask = buckets_.size() - 1;
+          return hasher_(key) & mask;
+        */
+        const uint64_t hash32 = hasher_(key) & UINT64_C(0xFFFFFFFF);
+        const uint64_t siz32 = buckets_.size();
+        return ( hash32 * siz32 ) >> 32; // see http://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/
     }
 
     size_t probe_next(size_t idx) const {
-        const size_t mask = buckets_.size() - 1;
-        return (idx + 1) & mask;
+        /* was:  const size_t mask = buckets_.size() - 1;
+         return (idx + 1) & mask; */
+        size_t nextidx = idx + 1;
+        if(nextidx == buckets_.size()) { // branch rarely taken (cheap)
+          return 0;
+        }
+        return nextidx;
     }
 
+
     size_t diff(size_t a, size_t b) const {
-        const size_t mask = buckets_.size() - 1;
-        return (buckets_.size() + (a - b)) & mask;
+        /** was : const size_t mask = buckets_.size() - 1;
+        return (buckets_.size() + (a - b)) & mask; */
+        const size_t siz = buckets_.size();
+        const size_t d = a - b + size;// between 0 and 2 size -1
+        if(d >= buckets_.size()) return d - siz;
+        return d;
     }
 
     key_type empty_key_;
