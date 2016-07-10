@@ -310,7 +310,7 @@ private:
         /** was : const size_t mask = buckets_.size() - 1;
         return (buckets_.size() + (a - b)) & mask; */
         const size_t siz = buckets_.size();
-        const size_t d = a - b + size;// between 0 and 2 size -1
+        const size_t d = a - b + siz;// between 0 and 2 size -1
         if(d >= buckets_.size()) return d - siz;
         return d;
     }
