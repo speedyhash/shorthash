@@ -35,26 +35,33 @@ void basic(std::vector<uint64_t> & keys, uint64_t N  , const int repeat) {
     uint8_t *  bitset = new uint8_t[howmanychars];
 
     uint64_t probing_offset = 0;
+    uint64_t probing_offset_square = 0;
     for(int r = 0 ; r < repeat; ++r) {
         memset(bitset,0, N/8);
         Pack p;
         for(uint32_t k = 0 ; k < howmany; ++k)  {
              uint32_t result = p(keys[k]) % N;
-            size_t thisoffset = 0;
+            size_t thisoffset = 1; // always one probe
             while((bitset[result/ 8] & (1 << (result % 8))) != 0 ) {
               result ++;
               thisoffset++;
               if (result == N) result = 0;
             }
             probing_offset += thisoffset;
+            probing_offset_square += thisoffset * thisoffset;
             bitset[result / 8] |= (1 << (result % 8));
         }
     }
-    delete[] bitset;
 
     double values_stored = repeat * howmany;
+    double average_prob = probing_offset / values_stored;
 
-     std::cout << "  average linear probing =   " << setw(10) << probing_offset / values_stored ;
+    std::cout << "  average linear probing =   " << setw(10) <<  average_prob;
+
+    double std_err = sqrt(probing_offset_square / values_stored - average_prob * average_prob);
+
+    std::cout << "  std error  =   " << setw(10) <<  std_err;
+    delete[] bitset;
 
     std::cout << std::endl;
 
@@ -122,7 +129,11 @@ int main() {
 
     demofixed(1000, loadfactor, repeat);
     demofixed(2000, loadfactor, repeat);
+    demofixed(4000, loadfactor, repeat);
+    demofixed(8000, loadfactor, repeat);
+    demofixed(16000, loadfactor, repeat);
+    demofixed(32000, loadfactor, repeat);
     demofixed(64000, loadfactor, repeat);
-    demofixed(120000, loadfactor, repeat);
+    demofixed(128000, loadfactor, repeat);
 
 }

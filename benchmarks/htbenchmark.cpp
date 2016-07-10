@@ -6,6 +6,8 @@
 #include <iostream>
 #include <limits>
 #include <vector>
+#include <cmath>
+
 #include <sys/resource.h>
 
 #include "hashpack.h"
@@ -56,12 +58,16 @@ size_t  query(ht & h, vector<uint64_t> & keys) {
 }
 
 template <typename ht>
-double query_avg_probed_keys(ht & h, vector<uint64_t> & keys) {
-    size_t sum = 0;
+void query_avg_probed_keys(ht & h, vector<uint64_t> & keys, double * average, double * stderrprob) {
+    double sum = 0;
+    double sumsquare = 0;
     for(size_t i = 0; i < keys.size(); ++i) {
-        sum += h.probed_keys(keys[i]);
+        double probed = h.probed_keys(keys[i]);
+        sum += probed;
+        sumsquare += probed * probed;
     }
-    return sum * 1.0 / keys.size();
+    *average = sum  / keys.size();
+    *stderrprob = sqrt(sumsquare /  keys.size() - *average * *average );
 }
 
 template <typename ht>
@@ -80,7 +86,9 @@ template <typename Pack>
 void basic(std::vector<uint64_t> & keys,  const float loadfactor, const int repeat) {
     double querycycles = 0;
     double probesperquery = 0;
+    double probesperquerystderr = 0;
     double maxprobesperquery = 0;
+
     size_t howmany = keys.size();
     std::cout << "testing "  << setw(20) << string(Pack::NAME) << " ";
     std::cout.flush();
@@ -100,15 +108,17 @@ void basic(std::vector<uint64_t> & keys,  const float loadfactor, const int repe
         sum += query(hm,keys);
         cycles_end = RDTSC_FINAL();
         querycycles += (cycles_end - cycles_start) * 1.0 / howmany;
-
-        double pk = query_avg_probed_keys(hm,keys);
+        double pk, pkerr;
+        query_avg_probed_keys(hm,keys, &pk, &pkerr);
         double mk = query_max_probed_keys(hm,keys);
         probesperquery += pk;
+        probesperquerystderr += pkerr;
         maxprobesperquery += mk;
     }
     std::cout << "     " << setw(10) << querycycles / repeat << " cycles per query on average " ;
     std::cout << "     " << setw(10) << probesperquery / repeat << " probes per query on average " ;
-    std::cout << "     " << setw(10) << maxprobesperquery / repeat << " max probes per query on average " ;
+    std::cout << "     " << setw(10) << probesperquerystderr / repeat << " std. error  on average " ;
+    std::cout << "     " << setw(10) << maxprobesperquery / repeat << " max probes on average " ;
     std::cout << " ignore me: " << sum ;
     std::cout << std::endl;
 
