@@ -8,31 +8,9 @@
 #include <vector>
 
 #include "hashpack.h"
+#include "timers.hpp"
 
 using namespace std;
-
-
-inline uint64_t RDTSC_START() {
-    unsigned cyc_high, cyc_low;
-    __asm volatile("cpuid\n\t"
-                   "rdtsc\n\t"
-                   "mov %%edx, %0\n\t"
-                   "mov %%eax, %1\n\t"
-                   : "=r"(cyc_high), "=r"(cyc_low)::"%rax", "%rbx", "%rcx",
-                     "%rdx");
-    return ((uint64_t)cyc_high << 32) | cyc_low;
-}
-
-inline uint64_t RDTSC_FINAL() {
-    unsigned cyc_high, cyc_low;
-    __asm volatile("rdtscp\n\t"
-                   "mov %%edx, %0\n\t"
-                   "mov %%eax, %1\n\t"
-                   "cpuid\n\t"
-                   : "=r"(cyc_high), "=r"(cyc_low)::"%rax", "%rbx", "%rcx",
-                     "%rdx");
-    return ((uint64_t)cyc_high << 32) | cyc_low;
-}
 
 static __attribute__((noinline)) uint64_t rdtsc_overhead_func(uint64_t dummy) {
     return dummy;
