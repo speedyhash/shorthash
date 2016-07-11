@@ -5,6 +5,19 @@
 
 #include "util.h"
 
+/**
+* The compiler is probably smart enough to do it right, but if not:
+
+uint64_t mulshift(uint64_t u, uint64_t v) {
+    uint64_t h;
+    __asm__ ("mulq %[v]\n"
+             :   [h] "+d" (h)    : [u] "a" (u), [v] "r" (v)  :"rdx","cc" );
+    return h;
+}
+
+*/
+
+
 // Multiply-shift is a 2-independent method of hashing without the need for
 // prime numbers. See M. Dietzfelbinger. "Universal hashing and k-wise
 // independent random variables via integer arithmetic without primes." In Proc.
