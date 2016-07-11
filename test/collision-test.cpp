@@ -66,7 +66,7 @@ int main() {
 
     ForEachT<Zobrist64Pack, WZobrist64Pack, ZobristTranspose64Pack,
              MultiplyShift64Pack, ClLinear64Pack, ClQuadratic64Pack,
-             ClFastQuadratic64Pack, ClFast2Quadratic64Pack, ClCubic64Pack,
+             ClFastQuadratic64Pack, ClCubic64Pack,
              ClQuartic64Pack, ThorupZhangCWLinear64Pack,
              ThorupZhangCWQuadratic64Pack, ThorupZhangCWCubic64Pack,
              Zobrist32Pack, WZobrist32Pack, MultiplyShift32Pack, ClLinear32Pack,

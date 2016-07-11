@@ -100,11 +100,6 @@ struct ClFastQuadratic32Pack : public GenericPack<uint32_t, cl_fastquadratic32_t
     static constexpr auto NAME = "ClFQuad32";
 };
 
-struct ClFast2Quadratic64Pack : public GenericPack<uint64_t, cl_fastquadratic2_t,
-        cl_fastquadratic2_init, cl_fastquadratic2> {
-    static constexpr auto NAME = "ClF2Q64";
-};
-
 
 struct ClCubic64Pack
         : public GenericPack<uint64_t, cl_cubic_t, cl_cubic_init, cl_cubic> {

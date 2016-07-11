@@ -209,7 +209,7 @@ int main() {
     printf("Keys are flushed at the beginning of each run.\n");
     const vector<uint32_t> sizes{10, 20, 100, 1000, 10000, 100000,1000000};
     basic<Zobrist64Pack,WZobrist64Pack, ZobristTranspose64Pack, ThorupZhang64Pack, MultiplyShift64Pack,
-          ClLinear64Pack, ClQuadratic64Pack, ClFastQuadratic64Pack, ClFast2Quadratic64Pack, ClCubic64Pack, ClQuartic64Pack, ThorupZhangCWLinear64Pack, ThorupZhangCWQuadratic64Pack, ThorupZhangCWCubic64Pack>(sizes, repeat);
+          ClLinear64Pack, ClQuadratic64Pack, ClFastQuadratic64Pack, ClCubic64Pack, ClQuartic64Pack, ThorupZhangCWLinear64Pack, ThorupZhangCWQuadratic64Pack, ThorupZhangCWCubic64Pack>(sizes, repeat);
 
     basic<Zobrist32Pack, WZobrist32Pack, ThorupZhang32Pack, MultiplyShift32Pack, ClLinear32Pack, ClFastQuadratic32Pack, CWQuad32Pack, ThorupZhangCWLinear32Pack, ThorupZhangCWQuadratic32Pack, ThorupZhangCWCubic32Pack>(sizes, repeat);
 
