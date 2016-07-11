@@ -81,50 +81,57 @@ size_t query_max_probed_keys(ht & h, vector<uint64_t> & keys) {
 }
 const uint64_t EMPTY = 0xFFFFFFFFFFFFFFFF;
 
+struct BasicWorker {
+    template <typename Pack>
+    static inline void Go(std::vector<uint64_t> &keys, const float loadfactor,
+                          const int repeat) {
+        double querycycles = 0;
+        double probesperquery = 0;
+        double probesperquerystderr = 0;
+        double maxprobesperquery = 0;
 
-template <typename Pack>
-void basic(std::vector<uint64_t> & keys,  const float loadfactor, const int repeat) {
-    double querycycles = 0;
-    double probesperquery = 0;
-    double probesperquerystderr = 0;
-    double maxprobesperquery = 0;
-
-    size_t howmany = keys.size();
-    std::cout << "testing "  << setw(20) << string(Pack::NAME) << " ";
-    std::cout.flush();
-    uint64_t sum = 0;
-    vector <HashMap<uint64_t, uint32_t, Pack> > collection;
-    uint64_t  cycles_start, cycles_end;
-    for(int r = 0 ; r < repeat; ++r) {
-        HashMap<uint64_t, uint32_t, Pack> hm(16, EMPTY, loadfactor);
-        cycles_start = RDTSC_START();
-        populate(hm,keys);
-        cycles_end = RDTSC_FINAL();
-        collection.push_back(hm);
+        size_t howmany = keys.size();
+        std::cout << "testing " << setw(20) << string(Pack::NAME) << " ";
+        std::cout.flush();
+        uint64_t sum = 0;
+        vector<HashMap<uint64_t, uint32_t, Pack>> collection;
+        uint64_t cycles_start, cycles_end;
+        for (int r = 0; r < repeat; ++r) {
+            HashMap<uint64_t, uint32_t, Pack> hm(16, EMPTY, loadfactor);
+            cycles_start = RDTSC_START();
+            populate(hm, keys);
+            cycles_end = RDTSC_FINAL();
+            collection.push_back(hm);
+        }
+        for (int r = 0; r < repeat; ++r) {
+            HashMap<uint64_t, uint32_t, Pack> &hm = collection[r];
+            cycles_start = RDTSC_START();
+            sum += query(hm, keys);
+            cycles_end = RDTSC_FINAL();
+            querycycles += (cycles_end - cycles_start) * 1.0 / howmany;
+            double pk, pkerr;
+            query_avg_probed_keys(hm, keys, &pk, &pkerr);
+            double mk = query_max_probed_keys(hm, keys);
+            probesperquery += pk;
+            probesperquerystderr += pkerr;
+            maxprobesperquery += mk;
+        }
+        std::cout << "     " << setw(10) << querycycles / repeat
+                  << " cycles per query on average ";
+        std::cout << "     " << setw(10) << probesperquery / repeat
+                  << " probes per query on average ";
+        std::cout << "     " << setw(10) << probesperquerystderr / repeat
+                  << " std. error  on average ";
+        std::cout << "     " << setw(10) << maxprobesperquery / repeat
+                  << " max probes on average ";
+        std::cout << " ignore me: " << sum;
+        std::cout << std::endl;
     }
-    for(int r = 0 ; r < repeat; ++r) {
-        HashMap<uint64_t, uint32_t, Pack> & hm = collection[r];
-        cycles_start = RDTSC_START();
-        sum += query(hm,keys);
-        cycles_end = RDTSC_FINAL();
-        querycycles += (cycles_end - cycles_start) * 1.0 / howmany;
-        double pk, pkerr;
-        query_avg_probed_keys(hm,keys, &pk, &pkerr);
-        double mk = query_max_probed_keys(hm,keys);
-        probesperquery += pk;
-        probesperquerystderr += pkerr;
-        maxprobesperquery += mk;
-    }
-    std::cout << "     " << setw(10) << querycycles / repeat << " cycles per query on average " ;
-    std::cout << "     " << setw(10) << probesperquery / repeat << " probes per query on average " ;
-    std::cout << "     " << setw(10) << probesperquerystderr / repeat << " std. error  on average " ;
-    std::cout << "     " << setw(10) << maxprobesperquery / repeat << " max probes on average " ;
-    std::cout << " ignore me: " << sum ;
-    std::cout << std::endl;
+    static inline void Stop() {}
+};
 
-}
-
-void demorandom(const uint64_t howmany, const float loadfactor, const float repeat) {
+void demorandom(const uint64_t howmany, const float loadfactor,
+                const float repeat) {
     srand(0);
     std::vector<uint64_t>  keys;
     for(uint64_t i = 1; i <= howmany; ++i) {
@@ -136,12 +143,10 @@ void demorandom(const uint64_t howmany, const float loadfactor, const float repe
     std::cout << "load factor = " << loadfactor << std::endl;
     std::cout << "We repeat with " << repeat << " different hash functions, using the same keys." << std::endl;
 
-
-    basic<Zobrist64Pack>(keys, loadfactor, repeat);
-
-    basic<MultiplyShift64Pack>(keys, loadfactor, repeat);
-    basic<ClLinear64Pack>(keys, loadfactor, repeat);
-    basic<ThorupZhangCWCubic64Pack>(keys, loadfactor, repeat);
+    ForEachT<Zobrist64Pack, MultiplyShift64Pack, ClLinear64Pack,
+             ThorupZhangCWCubic64Pack>::template Go<BasicWorker>(keys,
+                                                                 loadfactor,
+                                                                 repeat);
 
     std::cout << std::endl;
 
@@ -158,12 +163,10 @@ void demofixed(const uint64_t howmany, const float loadfactor, const float repea
     std::cout << "We repeat with " << repeat << " different hash functions, using the same keys." << std::endl;
 
 
-    basic<Zobrist64Pack>(keys, loadfactor, repeat);
-
-    basic<MultiplyShift64Pack>(keys, loadfactor, repeat);
-    basic<ClLinear64Pack>(keys, loadfactor, repeat);
-
-    basic<ThorupZhangCWCubic64Pack>(keys, loadfactor, repeat);
+    ForEachT<Zobrist64Pack, MultiplyShift64Pack, ClLinear64Pack,
+             ThorupZhangCWCubic64Pack>::template Go<BasicWorker>(keys,
+                                                                 loadfactor,
+                                                                 repeat);
 
     std::cout << std::endl;
 

@@ -18,47 +18,48 @@ We hash n 64-bit keys down to integers in [0,n).
 
 using namespace std;
 
+struct Worker {
+    template <typename Pack>
+    static inline void Go(std::vector<uint64_t> &keys, uint64_t N,
+                          const int repeat) {
+        uint32_t howmany = keys.size();
+        std::cout << "testing " << setw(20) << string(Pack::NAME) << " ";
+        std::cout.flush();
+        std::cout << "hashing  " << howmany << " values to  " << N
+                  << " buckets, ";
+        uint64_t sum = 0;
+        size_t howmanychars = (N + sizeof(long long)) / 8;
+        uint8_t *bitset = new uint8_t[howmanychars];
 
+        for (int r = 0; r < repeat; ++r) {
+            memset(bitset, 0, N / 8);
 
+            Pack p;
 
+            for (uint32_t k = 0; k < howmany; ++k) {
+                const uint32_t result = p(keys[k]);
+                bitset[(result % N) / 8] |= (1 << (result % 8));
+            }
 
-template <typename Pack>
-void basic(std::vector<uint64_t> & keys, uint64_t N  , const int repeat) {
-    uint32_t howmany = keys.size();
-    std::cout << "testing "  << setw(20) << string(Pack::NAME) << " ";
-    std::cout.flush();
-    std::cout << "hashing  "  << howmany << " values to  "<< N << " buckets, ";
-    uint64_t sum = 0;
-    size_t howmanychars = (N + sizeof(long long) ) / 8;
-    uint8_t *  bitset = new uint8_t[howmanychars];
-
-
-    for(int r = 0 ; r < repeat; ++r) {
-        memset(bitset,0, N/8);
-
-        Pack p;
-
-        for(uint32_t k = 0 ; k < howmany; ++k)  {
-            const uint32_t result = p(keys[k]);
-            bitset[(result % N)/ 8] |= (1 << (result % 8));
+            size_t count = 0;
+            long long *lp = (long long *)bitset;
+            for (size_t k = 0; k < howmanychars / sizeof(long long);
+                 ++k) { // not efficient
+                count += __builtin_popcountll(lp[k]);
+            }
+            sum += count;
         }
+        delete[] bitset;
 
-        size_t count = 0;
-        long long * lp = (long long *) bitset;
-        for (size_t k = 0; k < howmanychars / sizeof(long long); ++k) { // not efficient
-          count += __builtin_popcountll(lp[k]);
-        }
-        sum += count;
+        double buckets_used = sum;
+        double values_stored = repeat * howmany;
+
+        std::cout << "  average bucket size =   " << setw(10)
+                  << values_stored / buckets_used;
+        std::cout << std::endl;
     }
-    delete[] bitset;
-
-    double buckets_used = sum;
-    double values_stored = repeat * howmany;
-
-     std::cout << "  average bucket size =   " << setw(10) << values_stored / buckets_used ;
-    std::cout << std::endl;
-
-}
+    static inline void Stop() {}
+};
 
 void demorandom(const uint64_t howmany) {
     srand(0);
@@ -73,12 +74,8 @@ void demorandom(const uint64_t howmany) {
     uint64_t N = keys.size();
     std::cout << "We repeat with " << repeat << " different hash functions, using the random same keys." << std::endl;
 
-
-    basic<Zobrist64Pack>(keys, N, repeat);
-
-    basic<MultiplyShift64Pack>(keys, N, repeat);
-    basic<ClLinear64Pack>(keys, N, repeat);
-    basic<ThorupZhangCWCubic64Pack>(keys, N, repeat);
+    ForEachT<Zobrist64Pack, MultiplyShift64Pack, ClLinear64Pack,
+             ThorupZhangCWCubic64Pack>::template Go<Worker>(keys, N, repeat);
 
     std::cout << std::endl;
 
@@ -98,11 +95,8 @@ void demofixed(const uint64_t howmany) {
     std::cout << "We repeat with " << repeat << " different hash functions, using the same sequential keys." << std::endl;
 
 
-    basic<Zobrist64Pack>(keys, N, repeat);
-
-    basic<MultiplyShift64Pack>(keys, N, repeat);
-    basic<ClLinear64Pack>(keys, N, repeat);
-    basic<ThorupZhangCWCubic64Pack>(keys, N, repeat);
+    ForEachT<Zobrist64Pack, MultiplyShift64Pack, ClLinear64Pack,
+             ThorupZhangCWCubic64Pack>::template Go<Worker>(keys, N, repeat);
 
     std::cout << std::endl;
 

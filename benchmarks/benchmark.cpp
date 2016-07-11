@@ -158,38 +158,37 @@ inline timing_stat_t Bench(const typename T::Word *input, uint32_t length, int r
     return answer;
 }
 
-template <typename... Pack> inline void BenchPack(...) { cout << endl; }
-
-
-
-template <typename Pack, typename... Rest>
-inline void BenchPack(const typename Pack::Word *input, uint32_t length,
-                      int repeat) {
-    timing_stat_t t = Bench<Pack>(&input[0], length, repeat);
-
-    if(t.wrong_answer) {
-      cout << "BUG";
-    } else  {
-      cout << setw(FIELD_WIDTH) << fixed << setprecision(2) << t.avg_opc ;
+struct NameWorker {
+    template <typename Pack>
+    static inline void Go() {
+        cout << setw(FIELD_WIDTH)
+             << string(Pack::NAME).substr(0, FIELD_WIDTH - 1);
     }
-    BenchPack<Rest...>(input, length, repeat);
-}
+    static inline void Stop() { cout << endl; }
+};
 
-template <typename... Pack> inline void NamePack(...) { cout << endl; }
+struct SizeWorker {
+    template <typename Pack>
+    static inline void Go() {
+        cout << setw(FIELD_WIDTH) << sizeof(typename Pack::Randomness);
+    }
+    static inline void Stop() { cout << endl; }
+};
 
-template <typename Pack, typename... Rest>
-inline void NamePack(typename Pack::Word dummy) {
-    cout << setw(FIELD_WIDTH) << string(Pack::NAME).substr (0,FIELD_WIDTH-1);;
-    NamePack<Rest...>(dummy);
-}
+struct BenchPackWorker {
+    template <typename Pack>
+    static inline void Go(const typename Pack::Word *input, uint32_t length,
+                          int repeat) {
+        timing_stat_t t = Bench<Pack>(&input[0], length, repeat);
 
-template <typename... Pack> inline void SizePack(...) { cout << endl; }
-
-template <typename Pack, typename... Rest>
-inline void SizePack(typename Pack::Word dummy) {
-    cout << setw(FIELD_WIDTH) << sizeof(typename Pack::Randomness);
-    SizePack<Rest...>(dummy);
-}
+        if (t.wrong_answer) {
+            cout << "BUG";
+        } else {
+            cout << setw(FIELD_WIDTH) << fixed << setprecision(2) << t.avg_opc;
+        }
+    }
+    static inline void Stop() { cout << endl; }
+};
 
 template <typename Pack, typename... Packs>
 void RunSizedBench(uint32_t length, int repeat) {
@@ -198,7 +197,8 @@ void RunSizedBench(uint32_t length, int repeat) {
         i = get64rand();
     }
     cout << setw(FIRST_FIELD_WIDTH) << length;
-    BenchPack<Pack, Packs...>(&input[0], length, repeat);
+    ForEachT<Pack, Packs...>::template Go<BenchPackWorker>(&input[0], length,
+                                                           repeat);
 }
 
 template <typename Pack, typename... Packs>
@@ -206,13 +206,16 @@ void basic(const vector<uint32_t> &lengths, int repeat) {
     cout << numeric_limits<typename Pack::Word>::digits << " bit hash functions"
          << endl;
     cout << setw(FIRST_FIELD_WIDTH) << "size \\ hash fn";
-    NamePack<Pack, Packs...>(0);
+
+    ForEachT<Pack, Packs...>::template Go<NameWorker>();
     cout << setw(FIRST_FIELD_WIDTH) << "rand size";
-    SizePack<Pack, Packs...>(0);
+
+    ForEachT<Pack, Packs...>::template Go<SizeWorker>();
     for (const auto length : lengths) {
         RunSizedBench<Pack, Packs...>(length, repeat);
     }
 }
+
 #include <sys/resource.h>
 
 int main() {

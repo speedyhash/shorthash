@@ -178,3 +178,20 @@ struct ThorupZhangCWCubic32Pack
         : public GenericPack<uint32_t, ThorupZhangCWCubic32_t, ThorupZhangCWCubic32Init, ThorupZhangCWCubic32> {
     static constexpr auto NAME = "TCWCub32";
 };
+
+template <typename... Pack>
+struct ForEachT {
+    template <typename Worker, typename... Args>
+    inline static void Go(Args &&... ) {
+        Worker::Stop();
+    }
+};
+
+template <typename Pack, typename... Rest>
+struct ForEachT<Pack, Rest...> {
+    template <typename Worker, typename... Args>
+    inline static void Go(Args &&... args) {
+        Worker::template Go<Pack>(args...);
+        ForEachT<Rest...>::template Go<Worker>(args...);
+    }
+};

@@ -20,58 +20,62 @@ We hash n 64-bit keys down to integers in [0,n).
 
 using namespace std;
 
+struct Worker {
+    template <typename Pack>
+    static inline void Go(std::vector<uint64_t> &keys, uint64_t N,
+                          const int repeat) {
+        uint32_t howmany = keys.size();
+        assert(howmany <= N);
+        std::cout << "testing " << setw(20) << string(Pack::NAME) << " ";
+        std::cout.flush();
+        std::cout << "hashing  " << howmany << " values to  " << N
+                  << " buckets, ";
+        size_t howmanychars = (N + sizeof(long long)) / 8;
+        uint8_t *bitset = new uint8_t[howmanychars];
 
+        uint64_t probing_offset = 0;
+        uint64_t max_probing_offset = 0;
 
-
-
-template <typename Pack>
-void basic(std::vector<uint64_t> & keys, uint64_t N  , const int repeat) {
-    uint32_t howmany = keys.size();
-    assert(howmany <= N);
-    std::cout << "testing "  << setw(20) << string(Pack::NAME) << " ";
-    std::cout.flush();
-    std::cout << "hashing  "  << howmany << " values to  "<< N << " buckets, ";
-    size_t howmanychars = (N + sizeof(long long) ) / 8;
-    uint8_t *  bitset = new uint8_t[howmanychars];
-
-    uint64_t probing_offset = 0;
-    uint64_t max_probing_offset = 0;
-
-    uint64_t probing_offset_square = 0;
-    for(int r = 0 ; r < repeat; ++r) {
-        memset(bitset,0, N/8);
-        Pack p;
-        for(uint32_t k = 0 ; k < howmany; ++k)  {
-             uint32_t result = p(keys[k]) % N;
-            size_t thisoffset = 1; // always one prob
-            while((bitset[result/ 8] & (1 << (result % 8))) != 0 ) {
-              result ++;
-              thisoffset++;
-              if (result == N) result = 0;
+        uint64_t probing_offset_square = 0;
+        for (int r = 0; r < repeat; ++r) {
+            memset(bitset, 0, N / 8);
+            Pack p;
+            for (uint32_t k = 0; k < howmany; ++k) {
+                uint32_t result = p(keys[k]) % N;
+                size_t thisoffset = 1; // always one prob
+                while ((bitset[result / 8] & (1 << (result % 8))) != 0) {
+                    result++;
+                    thisoffset++;
+                    if (result == N)
+                        result = 0;
+                }
+                assert(thisoffset <= N);
+                if (thisoffset > max_probing_offset)
+                    max_probing_offset = thisoffset;
+                probing_offset += thisoffset;
+                probing_offset_square += thisoffset * thisoffset;
+                bitset[result / 8] |= (1 << (result % 8));
             }
-            assert(thisoffset <= N);
-            if(thisoffset > max_probing_offset) max_probing_offset = thisoffset;
-            probing_offset += thisoffset;
-            probing_offset_square += thisoffset * thisoffset;
-            bitset[result / 8] |= (1 << (result % 8));
         }
+
+        double values_stored = repeat * howmany;
+        double average_prob = probing_offset / values_stored;
+
+        std::cout << "  average linear probing =   " << setw(10)
+                  << average_prob;
+
+        double std_err = sqrt(probing_offset_square / values_stored -
+                              average_prob * average_prob);
+
+        std::cout << "  std error  =   " << setw(10) << std_err;
+        std::cout << "  max probing  =   " << setw(10) << max_probing_offset;
+
+        delete[] bitset;
+
+        std::cout << std::endl;
     }
-
-    double values_stored = repeat * howmany;
-    double average_prob = probing_offset / values_stored;
-
-    std::cout << "  average linear probing =   " << setw(10) <<  average_prob;
-
-    double std_err = sqrt(probing_offset_square / values_stored - average_prob * average_prob);
-
-    std::cout << "  std error  =   " << setw(10) <<  std_err;
-    std::cout << "  max probing  =   " << setw(10) <<  max_probing_offset;
-
-    delete[] bitset;
-
-    std::cout << std::endl;
-
-}
+    static inline void Stop() {}
+};
 
 void demorandom(const uint64_t howmany, const float loadfactor, const int repeat) {
     srand(0);
@@ -85,12 +89,8 @@ void demorandom(const uint64_t howmany, const float loadfactor, const int repeat
     uint64_t N = ceil(keys.size() / loadfactor);
     std::cout << "We repeat with " << repeat << " different hash functions, using the random same keys." << std::endl;
 
-
-    basic<Zobrist64Pack>(keys, N, repeat);
-
-    basic<MultiplyShift64Pack>(keys, N, repeat);
-    basic<ClLinear64Pack>(keys, N, repeat);
-    basic<ThorupZhangCWCubic64Pack>(keys, N, repeat);
+    ForEachT<Zobrist64Pack, MultiplyShift64Pack, ClLinear64Pack,
+             ThorupZhangCWCubic64Pack>::template Go<Worker>(keys, N, repeat);
 
     std::cout << std::endl;
 
@@ -109,11 +109,8 @@ void demofixed(const uint64_t howmany, const float loadfactor, const int repeat)
     std::cout << "We repeat with " << repeat << " different hash functions, using the same sequential keys." << std::endl;
 
 
-    basic<Zobrist64Pack>(keys, N, repeat);
-
-    basic<MultiplyShift64Pack>(keys, N, repeat);
-    basic<ClLinear64Pack>(keys, N, repeat);
-    basic<ThorupZhangCWCubic64Pack>(keys, N, repeat);
+    ForEachT<Zobrist64Pack, MultiplyShift64Pack, ClLinear64Pack,
+             ThorupZhangCWCubic64Pack>::template Go<Worker>(keys, N, repeat);
 
     std::cout << std::endl;
 
