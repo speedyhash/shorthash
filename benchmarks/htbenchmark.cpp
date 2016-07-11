@@ -1,13 +1,13 @@
+#include <cmath>
+#include <cstring>
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
-#include <random>
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <random>
 #include <vector>
-#include <cmath>
 
 #include <sys/resource.h>
 
@@ -81,6 +81,7 @@ struct BasicWorker {
             cycles_end = RDTSC_FINAL();
             collection.push_back(hm);
         }
+        double max_avg_probes = 0;
         for (int r = 0; r < repeat; ++r) {
             HashMap<uint64_t, uint32_t, Pack> &hm = collection[r];
             cycles_start = RDTSC_START();
@@ -89,19 +90,22 @@ struct BasicWorker {
             querycycles += (cycles_end - cycles_start) * 1.0 / howmany;
             double pk, pkerr;
             query_avg_probed_keys(hm, keys, &pk, &pkerr);
+            max_avg_probes = std::max<double>(pk, max_avg_probes);
             double mk = query_max_probed_keys(hm, keys);
             probesperquery += pk;
             probesperquerystderr += pkerr;
             maxprobesperquery += mk;
         }
         std::cout << "     " << setw(10) << querycycles / repeat
-                  << " cycles per query on average ";
+                  << " avg cycles ";
         std::cout << "     " << setw(10) << probesperquery / repeat
-                  << " probes per query on average ";
+                  << " avg probes ";
         std::cout << "     " << setw(10) << probesperquerystderr / repeat
-                  << " std. error  on average ";
+                  << " avg std. error ";
         std::cout << "     " << setw(10) << maxprobesperquery / repeat
-                  << " max probes on average ";
+                  << " avg max probes ";
+        std::cout << "     " << setw(10) << max_avg_probes
+                  << " max avg probes ";
         std::cout << " ignore me: " << sum;
         std::cout << std::endl;
     }
