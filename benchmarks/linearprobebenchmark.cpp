@@ -89,7 +89,7 @@ void demorandom(const uint64_t howmany, const float loadfactor, const int repeat
     uint64_t N = ceil(keys.size() / loadfactor);
     std::cout << "We repeat with " << repeat << " different hash functions, using the random same keys." << std::endl;
 
-    ForEachT<Zobrist64Pack, MultiplyShift64Pack, ClLinear64Pack,
+    ForEachT<Zobrist64Pack, MultiplyShift64Pack, ClLinear64Pack, ClQuadratic64Pack, ClCubic64Pack, ClQuartic64Pack,
              ThorupZhangCWCubic64Pack>::template Go<Worker>(keys, N, repeat);
 
     std::cout << std::endl;
@@ -102,14 +102,16 @@ void demofixed(const uint64_t howmany, const float loadfactor, const int repeat)
     for(uint64_t i = 1; i <= howmany; ++i) {
         keys.push_back(i +  UINT64_C(5555555555));
     }
-    std::sort( keys.begin(), keys.end() );
-    keys.erase( std::unique( keys.begin(), keys.end() ), keys.end() );
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(keys.begin(), keys.end(),g);
+
 
     uint64_t N = ceil(keys.size() / loadfactor);
     std::cout << "We repeat with " << repeat << " different hash functions, using the same sequential keys." << std::endl;
 
 
-    ForEachT<Zobrist64Pack, MultiplyShift64Pack, ClLinear64Pack,
+    ForEachT<Zobrist64Pack, MultiplyShift64Pack, ClLinear64Pack, ClQuadratic64Pack, ClCubic64Pack, ClQuartic64Pack,
              ThorupZhangCWCubic64Pack>::template Go<Worker>(keys, N, repeat);
 
     std::cout << std::endl;
