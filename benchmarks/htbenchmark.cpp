@@ -1,6 +1,7 @@
 #include <cmath>
 #include <cstring>
 #include <cstdio>
+#include <cassert>
 #include <cstdlib>
 #include <algorithm>
 #include <iomanip>
@@ -26,9 +27,9 @@ void populate(ht & h, vector<uint64_t> & keys) {
 }
 
 template <typename ht>
-size_t  query(ht & h, vector<uint64_t> & keys) {
+size_t  query(ht & h, vector<uint64_t> & keys, size_t howmany) {
     size_t sum = 0;
-    for(size_t i = 0; i < keys.size(); ++i) {
+    for(size_t i = 0; i < howmany; ++i) {
         auto it = h.find(keys[i]);
         if(it != h.end()) sum+= it->second;
     }
@@ -62,13 +63,14 @@ const uint64_t EMPTY = 0xFFFFFFFFFFFFFFFF;
 struct BasicWorker {
     template <typename Pack>
     static inline void Go(std::vector<uint64_t> &keys, const float loadfactor,
-                          const int repeat) {
+                          const int repeat, size_t howmanyqueries) {
         double querycycles = 0;
         double probesperquery = 0;
         double probesperquerystderr = 0;
         double maxprobesperquery = 0;
 
         size_t howmany = keys.size();
+        assert(howmanyqueries <= howmany);
         std::cout << "testing " << setw(20) << string(Pack::NAME) << " ";
         std::cout.flush();
         uint64_t sum = 0;
@@ -85,9 +87,9 @@ struct BasicWorker {
         for (int r = 0; r < repeat; ++r) {
             HashMap<uint64_t, uint32_t, Pack> &hm = collection[r];
             cycles_start = RDTSC_START();
-            sum += query(hm, keys);
+            sum += query(hm, keys, howmanyqueries);
             cycles_end = RDTSC_FINAL();
-            querycycles += (cycles_end - cycles_start) * 1.0 / howmany;
+            querycycles += (cycles_end - cycles_start) * 1.0 / howmanyqueries;
             double pk, pkerr;
             query_avg_probed_keys(hm, keys, &pk, &pkerr);
             max_avg_probes = std::max<double>(pk, max_avg_probes);
@@ -113,7 +115,7 @@ struct BasicWorker {
 };
 
 void demorandom(const uint64_t howmany, const float loadfactor,
-                const float repeat) {
+                const float repeat, const size_t howmanyqueries) {
     srand(0);
     std::vector<uint64_t>  keys;
     for(uint64_t i = 1; i <= howmany; ++i) {
@@ -123,18 +125,20 @@ void demorandom(const uint64_t howmany, const float loadfactor,
     }
     std::cout << "populating a hash table with " << howmany << " random 64-bit keys and then retrieving them. " << std::endl;
     std::cout << "load factor = " << loadfactor << std::endl;
+    std::cout << "number of consecutive queries on same hash table = " << howmanyqueries << std::endl;
+
     std::cout << "We repeat with " << repeat << " different hash functions, using the same keys." << std::endl;
 
     ForEachT<Zobrist64Pack, MultiplyShift64Pack, ClLinear64Pack, ClQuadratic64Pack, ClCubic64Pack, ClQuartic64Pack,
              ThorupZhangCWCubic64Pack>::template Go<BasicWorker>(keys,
                                                                  loadfactor,
-                                                                 repeat);
+                                                                 repeat, howmanyqueries);
 
     std::cout << std::endl;
 
 }
 
-void demofixed(const uint64_t howmany, const float loadfactor, const float repeat) {
+void demofixed(const uint64_t howmany, const float loadfactor, const float repeat, const size_t howmanyqueries) {
     srand(0);
     std::vector<uint64_t>  keys;
     for(uint64_t i = 1; i <= howmany; ++i) {
@@ -144,15 +148,17 @@ void demofixed(const uint64_t howmany, const float loadfactor, const float repea
     std::mt19937 g(rd());
     std::shuffle(keys.begin(), keys.end(),g);
 
-    std::cout << "populating a hash table with " << howmany << " sequential 64-bit keys and then retrieving them. " << std::endl;
+    std::cout << "populating a hash table with " << howmany << " sequential and shuffled 64-bit keys and then retrieving them. " << std::endl;
     std::cout << "load factor = " << loadfactor << std::endl;
+    std::cout << "number of consecutive queries on same hash table = " << howmanyqueries << std::endl;
+
     std::cout << "We repeat with " << repeat << " different hash functions, using the same keys." << std::endl;
 
 
     ForEachT<Zobrist64Pack, MultiplyShift64Pack, ClLinear64Pack, ClQuadratic64Pack, ClCubic64Pack, ClQuartic64Pack,
              ThorupZhangCWCubic64Pack>::template Go<BasicWorker>(keys,
                                                                  loadfactor,
-                                                                 repeat);
+                                                                 repeat,howmanyqueries);
 
     std::cout << std::endl;
 
@@ -162,17 +168,18 @@ void demofixed(const uint64_t howmany, const float loadfactor, const float repea
 int main() {
     const float loadfactor = 0.9;
     const float repeat = 1000;
+    const size_t howmanyqueries = 10;
 
-    demofixed(1000, loadfactor, repeat);
-    demofixed(2000, loadfactor, repeat);
-    demofixed(64000, loadfactor, repeat);
-    demofixed(120000, loadfactor, repeat);
+    demofixed(1000, loadfactor, repeat, howmanyqueries);
+    demofixed(2000, loadfactor, repeat, howmanyqueries);
+    demofixed(64000, loadfactor, repeat, howmanyqueries);
+    demofixed(120000, loadfactor, repeat, howmanyqueries);
 
     std::cout << "=======" << std::endl;
 
-    demorandom(1000, loadfactor, repeat);
-    demorandom(2000, loadfactor, repeat);
-    demorandom(64000, loadfactor, repeat);
-    demorandom(120000, loadfactor, repeat);
+    demorandom(1000, loadfactor, repeat, howmanyqueries);
+    demorandom(2000, loadfactor, repeat, howmanyqueries);
+    demorandom(64000, loadfactor, repeat, howmanyqueries);
+    demorandom(120000, loadfactor, repeat, howmanyqueries);
 
 }
