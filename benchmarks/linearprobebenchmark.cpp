@@ -10,6 +10,7 @@ We hash n 64-bit keys down to integers in [0,n).
 #include <iostream>
 #include <limits>
 #include <vector>
+#include <random>
 #include <algorithm>
 #include <cassert>
 #include <cmath>

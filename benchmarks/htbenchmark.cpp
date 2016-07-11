@@ -1,7 +1,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-
+#include <random>
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <limits>
