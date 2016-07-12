@@ -5,6 +5,74 @@
 #include <limits.h>
 #include "util.h"
 
+
+/**
+Cyclic is analyzed in
+"Recursive n-gram hashing is pairwise independent, at best"
+*/
+
+typedef struct cyclic_s {
+    uint64_t hashtab[1 << CHAR_BIT];
+} cyclic_t;
+
+void cyclic_init(cyclic_t *k) {
+        for (uint32_t j = 0; j < (1 << CHAR_BIT); j++) {
+            k->hashtab[j] = get64rand();
+        }
+}
+
+// shoudl get compiled to ror on x64
+static inline uint64_t rotate(uint64_t x, int r) {
+  return (x >> r) | (x << (64 - r));
+}
+
+__attribute__((always_inline))
+inline uint64_t cyclic(uint64_t val, const cyclic_t *k) {
+    uint64_t h = 0;
+    const unsigned char *s = (const unsigned char *)&val;
+    h ^= k->hashtab[s[0]];
+    h ^= rotate(k->hashtab[s[1]],1);
+    h ^= rotate(k->hashtab[s[2]],2);
+    h ^= rotate(k->hashtab[s[3]],3);
+    h ^= rotate(k->hashtab[s[4]],4);
+    h ^= rotate(k->hashtab[s[5]],5);
+    h ^= rotate(k->hashtab[s[6]],6);
+    h ^= rotate(k->hashtab[s[7]],7);
+    return h;
+}
+
+typedef struct cyclic32_s {
+    uint32_t hashtab[1 << CHAR_BIT];
+} cyclic32_t;
+
+void cyclic32_init(cyclic32_t *k) {
+        for (uint32_t j = 0; j < (1 << CHAR_BIT); j++) {
+            k->hashtab[j] = get32rand();
+        }
+}
+
+// shoudl get compiled to ror on x64
+static inline uint32_t rotate32(uint32_t x, int r) {
+  return (x >> r) | (x << (32 - r));
+}
+
+__attribute__((always_inline))
+inline uint32_t cyclic32(uint32_t val, const cyclic32_t *k) {
+    uint32_t h = 0;
+    const unsigned char *s = (const unsigned char *)&val;
+    h ^= k->hashtab[s[0]];
+    h ^= rotate32(k->hashtab[s[1]],1);
+    h ^= rotate32(k->hashtab[s[2]],2);
+    h ^= rotate32(k->hashtab[s[3]],3);
+    return h;
+}
+
+
+/**
+* Zobrist is 3-wise ind.
+*/
+
+
 typedef struct zobrist_s {
     uint64_t hashtab[sizeof(uint64_t)][1 << CHAR_BIT];
 } zobrist_t;

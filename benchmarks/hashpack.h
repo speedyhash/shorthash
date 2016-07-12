@@ -47,6 +47,18 @@ private:
     std::shared_ptr<Randomness> myr;
 };
 
+
+struct Cyclic64Pack
+        : public GenericPack<uint64_t, cyclic_t, cyclic_init, cyclic> {
+    static constexpr auto NAME = "Cyclic64";
+};
+
+struct Cyclic32Pack
+        : public GenericPack<uint32_t, cyclic32_t, cyclic32_init, cyclic32> {
+    static constexpr auto NAME = "Cyclic32";
+};
+
+
 struct Zobrist64Pack
         : public GenericPack<uint64_t, zobrist_t, zobrist_init, zobrist> {
     static constexpr auto NAME = "Zobrist64";

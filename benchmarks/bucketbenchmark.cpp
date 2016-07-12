@@ -74,7 +74,7 @@ void demorandom(const uint64_t howmany) {
     uint64_t N = keys.size();
     std::cout << "We repeat with " << repeat << " different hash functions, using the random same keys." << std::endl;
 
-    ForEachT<Zobrist64Pack, MultiplyShift64Pack, ClLinear64Pack,
+    ForEachT<Cyclic64Pack, Zobrist64Pack, MultiplyShift64Pack, ClLinear64Pack,
              ThorupZhangCWCubic64Pack>::template Go<Worker>(keys, N, repeat);
 
     std::cout << std::endl;
@@ -95,7 +95,7 @@ void demofixed(const uint64_t howmany) {
     std::cout << "We repeat with " << repeat << " different hash functions, using the same sequential keys." << std::endl;
 
 
-    ForEachT<Zobrist64Pack, MultiplyShift64Pack, ClLinear64Pack,
+    ForEachT<Cyclic64Pack, Zobrist64Pack, WZobrist64Pack, MultiplyShift64Pack, ClLinear64Pack,
              ThorupZhangCWCubic64Pack>::template Go<Worker>(keys, N, repeat);
 
     std::cout << std::endl;
