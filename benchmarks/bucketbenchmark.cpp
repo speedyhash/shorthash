@@ -14,6 +14,7 @@ We hash n 64-bit keys down to integers in [0,n).
 
 #include <sys/resource.h>
 
+#include "buckets.hpp"
 #include "hashpack.h"
 
 using namespace std;
@@ -32,15 +33,8 @@ struct Worker {
         double total_search_time = 0;
 
         for (int r = 0; r < repeat; ++r) {
-            vector<size_t> buckets(N, 0);
             Pack p;
-            double search_time = 0;
-
-            for (const auto key : keys) {
-                const auto location = p(key) % keys.size();
-                ++buckets[location];
-                search_time += buckets[location];
-            }
+            const double search_time = SearchTime(p, N, keys);
 
             max_search_time = std::max(search_time, max_search_time);
             min_search_time = std::min(search_time, min_search_time);
@@ -56,6 +50,7 @@ struct Worker {
     static inline void Stop() {}
 };
 
+template<typename... Packs>
 void demofixed(const uint64_t howmany) {
     srand(0);
     const float repeat = 10000;
@@ -67,13 +62,11 @@ void demofixed(const uint64_t howmany) {
     uint64_t N = keys.size();
     std::cout << "We repeat with " << repeat << " different hash functions, using the same sequential keys." << std::endl;
 
-    ForEachT<Cyclic64Pack, Zobrist64Pack, MultiplyShift64Pack, ClLinear64Pack,
-             ThorupZhangCWCubic64Pack>::template Go<Worker>(keys, N, repeat);
+    ForEachT<Packs...>::template Go<Worker>(keys, N, repeat);
 
     std::cout << std::endl;
 
 }
-
 
 int main() {
     vector<uint64_t> sizes{1000,          4000,          1 << 10,
@@ -81,6 +74,7 @@ int main() {
                            (1 << 10) + 1, (1 << 12) + 1};
     sort(sizes.begin(), sizes.end());
     for (const auto size : sizes) {
-        demofixed(size);
+        demofixed<Cyclic64Pack, Zobrist64Pack, MultiplyShift64Pack,
+                  ClLinear64Pack, ThorupZhangCWCubic64Pack>(size);
     }
 }

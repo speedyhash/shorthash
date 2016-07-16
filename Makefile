@@ -20,11 +20,10 @@ all: benchmark.exe htbenchmark.exe bucketbenchmark.exe \
 
 HEADERS = include/clhash.h include/tabulated.h include/util.h \
     include/multiply-shift.h include/cw-trick.h benchmarks/hashpack.h \
-    benchmarks/hashmap.h benchmarks/timers.hpp
+    benchmarks/hashmap.h benchmarks/timers.hpp benchmarks/buckets.hpp
 
 benchmark.exe: ./benchmarks/benchmark.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -o $@ $< -Iinclude
-
 
 htbenchmark.exe: ./benchmarks/htbenchmark.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -o $@ $< -Iinclude
@@ -38,8 +37,10 @@ linearprobebenchmark.exe: ./benchmarks/linearprobebenchmark.cpp $(HEADERS)
 cw-trick-test.exe: ./test/cw-trick-test.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -o $@ $< -Iinclude
 
-
 collision-test.exe: ./test/collision-test.cpp $(HEADERS)
+	$(CXX) $(CXXFLAGS) -o $@ $< -Iinclude
+
+worst.exe: ./benchmarks/worst.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -o $@ $< -Iinclude
 
 clean:

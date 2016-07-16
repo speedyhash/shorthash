@@ -41,9 +41,8 @@ public:
     inline size_t operator()(Word x) const {
         return HashFunction(x,myr.get());
     }
-private:
 
-
+  protected:
     std::shared_ptr<Randomness> myr;
 };
 
@@ -184,6 +183,13 @@ struct ThorupZhangCWQuadratic32Pack
 struct ThorupZhangCWCubic32Pack
         : public GenericPack<uint32_t, ThorupZhangCWCubic32_t, ThorupZhangCWCubic32Init, ThorupZhangCWCubic32> {
     static constexpr auto NAME = "TCWCub32";
+};
+
+struct MultiplyOnly8Pack
+        : public GenericPack<uint8_t, MultiplyOnly8Randomness,
+          MultiplyOnly8Init, MultiplyOnly8> {
+    static constexpr auto NAME = "Mo8";
+    explicit MultiplyOnly8Pack(const uint16_t v) { myr->mult = v; }
 };
 
 template <typename... Pack>

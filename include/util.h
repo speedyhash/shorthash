@@ -6,6 +6,10 @@
 
 typedef unsigned __int128 uint128_t;
 
+static uint32_t get16rand() {
+  return rand() >> 7;
+}
+
 static uint32_t get32rand() {
     return (((uint32_t)rand() << 0) & 0x0000FFFFul) |
            (((uint32_t)rand() << 16) & 0xFFFF0000ul);

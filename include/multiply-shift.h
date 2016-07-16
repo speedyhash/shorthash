@@ -21,7 +21,7 @@ uint64_t mulshift(uint64_t u, uint64_t v) {
 // Multiply-shift is a 2-independent method of hashing without the need for
 // prime numbers. See M. Dietzfelbinger. "Universal hashing and k-wise
 // independent random variables via integer arithmetic without primes." In Proc.
-// 13th STACS, LNCS 1046, pages 569–580, 1996.
+// 13th STACS, LNCS 1046, pages 569-580, 1996.
 typedef struct {
   uint128_t mult, add;
 } MultiplyShift64Randomness;
@@ -49,6 +49,19 @@ void MultiplyShift32Init(MultiplyShift32Randomness *x) {
 __attribute__((always_inline))
 inline uint32_t MultiplyShift32(uint32_t in, const MultiplyShift32Randomness * rand) {
   return ((((uint64_t)in) * rand->mult) + rand->add) >> 32;
+}
+
+typedef struct {
+  uint16_t mult;
+} MultiplyOnly8Randomness;
+
+void MultiplyOnly8Init(MultiplyOnly8Randomness *x) {
+  x->mult = get16rand();
+}
+
+__attribute__((always_inline))
+inline uint8_t MultiplyOnly8(uint8_t in, const MultiplyOnly8Randomness * rand) {
+    return (((uint16_t)in) * rand->mult) >> 8;
 }
 
 
