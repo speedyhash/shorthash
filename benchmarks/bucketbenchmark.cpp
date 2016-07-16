@@ -20,59 +20,52 @@ using namespace std;
 
 struct Worker {
     template <typename Pack>
-    static inline void Go(std::vector<uint64_t> &keys, uint64_t N,
+    static inline void Go(const std::vector<uint64_t> &keys, uint64_t N,
                           const int repeat) {
-        uint32_t howmany = keys.size();
         std::cout << "testing " << setw(20) << string(Pack::NAME) << " ";
         std::cout.flush();
-        std::cout << "hashing  " << howmany << " values to  " << N
+        std::cout << "hashing  " << keys.size() << " values to  " << N
                   << " buckets, ";
-        uint64_t sum = 0;
-        size_t howmanychars = (N + sizeof(long long)) / 8;
-        uint8_t *bitset = new uint8_t[howmanychars];
+
+        double max_search_time = 0;
+        double min_search_time = numeric_limits<double>::max();
+        double total_search_time = 0;
 
         for (int r = 0; r < repeat; ++r) {
-            memset(bitset, 0, N / 8);
-
+            vector<size_t> buckets(N, 0);
             Pack p;
+            double search_time = 0;
 
-            for (uint32_t k = 0; k < howmany; ++k) {
-                const uint32_t result = p(keys[k]);
-                bitset[(result % N) / 8] |= (1 << (result % 8));
+            for (const auto key : keys) {
+                const auto location = p(key) % keys.size();
+                ++buckets[location];
+                search_time += buckets[location];
             }
 
-            size_t count = 0;
-            long long *lp = (long long *)bitset;
-            for (size_t k = 0; k < howmanychars / sizeof(long long);
-                 ++k) { // not efficient
-                count += __builtin_popcountll(lp[k]);
-            }
-            sum += count;
+            max_search_time = std::max(search_time, max_search_time);
+            min_search_time = std::min(search_time, min_search_time);
+            total_search_time += search_time;
         }
-        delete[] bitset;
 
-        double buckets_used = sum;
-        double values_stored = repeat * howmany;
-
-        std::cout << "  average bucket size =   " << setw(10)
-                  << values_stored / buckets_used;
-        std::cout << std::endl;
+        std::cout << "average search time, max, min, avg =   " << setw(10)
+                  << max_search_time / keys.size() << setw(10)
+                  << min_search_time / keys.size() << setw(10)
+                  << total_search_time / (repeat * keys.size()) << std::endl;
     }
+
     static inline void Stop() {}
 };
 
-void demorandom(const uint64_t howmany) {
+void demofixed(const uint64_t howmany) {
     srand(0);
-    const float repeat = 1000;
+    const float repeat = 10000;
     std::vector<uint64_t>  keys;
     for(uint64_t i = 1; i <= howmany; ++i) {
-        keys.push_back(get64rand());
+        keys.push_back(i + UINT64_C(555555555));
     }
-    std::sort( keys.begin(), keys.end() );
-    keys.erase( std::unique( keys.begin(), keys.end() ), keys.end() );
 
     uint64_t N = keys.size();
-    std::cout << "We repeat with " << repeat << " different hash functions, using the random same keys." << std::endl;
+    std::cout << "We repeat with " << repeat << " different hash functions, using the same sequential keys." << std::endl;
 
     ForEachT<Cyclic64Pack, Zobrist64Pack, MultiplyShift64Pack, ClLinear64Pack,
              ThorupZhangCWCubic64Pack>::template Go<Worker>(keys, N, repeat);
@@ -81,37 +74,13 @@ void demorandom(const uint64_t howmany) {
 
 }
 
-void demofixed(const uint64_t howmany) {
-    srand(0);
-    const float repeat = 1000;
-    std::vector<uint64_t>  keys;
-    for(uint64_t i = 1; i <= howmany; ++i) {
-        keys.push_back(i +  UINT64_C(5555555555));
-    }
-    std::sort( keys.begin(), keys.end() );
-    keys.erase( std::unique( keys.begin(), keys.end() ), keys.end() );
-
-    uint64_t N = keys.size();
-    std::cout << "We repeat with " << repeat << " different hash functions, using the same sequential keys." << std::endl;
-
-
-    ForEachT<Cyclic64Pack, Zobrist64Pack, WZobrist64Pack, MultiplyShift64Pack, ClLinear64Pack,
-             ThorupZhangCWCubic64Pack>::template Go<Worker>(keys, N, repeat);
-
-    std::cout << std::endl;
-
-}
-
 
 int main() {
-    demorandom(1000);
-    demorandom(2000);
-    demorandom(64000);
-    demorandom(120000);
-
-    demofixed(1000);
-    demofixed(2000);
-    demofixed(64000);
-    demofixed(120000);
-
+    vector<uint64_t> sizes{1000,          4000,          1 << 10,
+                           1 << 12,       (1 << 10) - 1, (1 << 12) - 1,
+                           (1 << 10) + 1, (1 << 12) + 1};
+    sort(sizes.begin(), sizes.end());
+    for (const auto size : sizes) {
+        demofixed(size);
+    }
 }
