@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <cmath>
 
 #include <string>
 #include <limits>
@@ -24,6 +25,16 @@ string bits(T x) {
   return ans;
 }
 
+template<typename T>
+double inverseOfFraction(T x) {
+  double ans = 0;
+  for (int i = 1; i <= numeric_limits<T>::digits; ++i) {
+    ans += (x % 2) * pow(2,-1+i-numeric_limits<T>::digits);
+    x >>= 1;
+  }
+  return 1/ans;
+}
+
 int main() {
   vector<uint8_t> data(256);
   iota(data.begin(), data.end(), 0);
@@ -35,6 +46,7 @@ int main() {
        std::greater<pair<size_t, uint16_t>>());
   for (int i = 0; i < (1 << 16); ++i) {
       cout << dec << setw(10) << functions[i].first << setw(20)
-           << bits(functions[i].second) << endl;
+           << bits(functions[i].second) << setw(10) << functions[i].second
+           << setw(10) << inverseOfFraction(functions[i].second) << endl;
   }
 }
