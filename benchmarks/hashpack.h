@@ -96,6 +96,18 @@ struct MultiplyShift64Pack
     static constexpr auto NAME = "MS64";
 };
 
+struct MultiplyTwice64Pack
+        : public GenericPack<uint64_t, MultiplyTwice64Randomness,
+          MultiplyTwice64Init, MultiplyTwice64> {
+    static constexpr auto NAME = "M2-64";
+};
+
+struct MultiplyThrice64Pack
+        : public GenericPack<uint64_t, MultiplyThrice64Randomness,
+          MultiplyThrice64Init, MultiplyThrice64> {
+    static constexpr auto NAME = "M3-64";
+};
+
 struct ClQuadratic64Pack : public GenericPack<uint64_t, cl_quadratic_t,
         cl_quadratic_init, cl_quadratic> {
     static constexpr auto NAME = "ClQuad64";

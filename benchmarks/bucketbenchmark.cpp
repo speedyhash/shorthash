@@ -75,6 +75,7 @@ int main() {
     sort(sizes.begin(), sizes.end());
     for (const auto size : sizes) {
         demofixed<Cyclic64Pack, Zobrist64Pack, MultiplyShift64Pack,
-                  ClLinear64Pack, ThorupZhangCWCubic64Pack>(size);
+                  ClLinear64Pack, ThorupZhangCWCubic64Pack,
+                  MultiplyTwice64Pack>(size);
     }
 }

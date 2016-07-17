@@ -36,6 +36,39 @@ inline uint64_t MultiplyShift64(uint64_t in, const MultiplyShift64Randomness * r
   return ((((uint128_t)in) * rand->mult) + rand->add) >> 64;
 }
 
+typedef struct {
+  uint128_t mult1, mult2;
+} MultiplyTwice64Randomness;
+
+void MultiplyTwice64Init(MultiplyTwice64Randomness *x) {
+  x->mult1 = get128rand();
+  x->mult2 = get128rand();
+}
+
+__attribute__((always_inline)) inline uint64_t
+    MultiplyTwice64(uint64_t in, const MultiplyTwice64Randomness *rand) {
+    return ((((uint128_t)in) * rand->mult1) >> 64) ^
+           ((((uint128_t)in) * rand->mult2) >> 64);
+}
+
+typedef struct {
+  uint128_t mults[3];
+} MultiplyThrice64Randomness;
+
+void MultiplyThrice64Init(MultiplyThrice64Randomness *x) {
+    for (int i = 0; i < 3; ++i) {
+        x->mults[i] = get128rand();
+    }
+}
+
+__attribute__((always_inline)) inline uint64_t
+    MultiplyThrice64(uint64_t in, const MultiplyThrice64Randomness *rand) {
+    uint64_t ans = (((uint128_t)in) * rand->mults[0]) >> 64;
+    for (int i = 1; i < 3; ++i) {
+        ans ^= (((uint128_t)in) * rand->mults[i]) >> 64;
+    }
+    return ans;
+}
 
 typedef struct {
   uint64_t mult, add;
