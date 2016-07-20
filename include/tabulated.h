@@ -21,7 +21,7 @@ void cyclic_init(cyclic_t *k) {
         }
 }
 
-// shoudl get compiled to ror on x64
+// should get compiled to ror on x64
 static inline uint64_t rotate(uint64_t x, int r) {
   return (x >> r) | (x << (64 - r));
 }
