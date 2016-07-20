@@ -5,6 +5,7 @@ extern "C" {
 #include "cw-trick.h"
 #include "multiply-shift.h"
 #include "tabulated.h"
+#include "crc.h"
 }
 
 template <typename WordP, typename RandomnessP,
@@ -57,6 +58,16 @@ struct Cyclic32Pack
     static constexpr auto NAME = "Cyclic32";
 };
 
+
+struct CRC32_64Pack
+        : public GenericPack<uint64_t, CRCRandomness, CRCInit, CRC32_64> {
+    static constexpr auto NAME = "CRC32_64";
+};
+
+struct CRC32Pack
+        : public GenericPack<uint32_t, CRCRandomness, CRCInit, CRC32> {
+    static constexpr auto NAME = "CRC32";
+};
 
 struct Zobrist64Pack
         : public GenericPack<uint64_t, zobrist_t, zobrist_init, zobrist> {

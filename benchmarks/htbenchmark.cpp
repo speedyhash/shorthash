@@ -129,7 +129,7 @@ void demorandom(const uint64_t howmany, const float loadfactor,
 
     std::cout << "We repeat with " << repeat << " different hash functions, using the same keys." << std::endl;
 
-    ForEachT<Cyclic64Pack, Zobrist64Pack, WZobrist64Pack, MultiplyShift64Pack, WZobrist64Pack, ClLinear64Pack, ClQuadratic64Pack, ClCubic64Pack, ClQuartic64Pack,
+    ForEachT<CRC32_64Pack, Cyclic64Pack, Zobrist64Pack, WZobrist64Pack, MultiplyShift64Pack, WZobrist64Pack, ClLinear64Pack, ClQuadratic64Pack, ClCubic64Pack, ClQuartic64Pack,
              ThorupZhangCWCubic64Pack>::template Go<BasicWorker>(keys,
                                                                  loadfactor,
                                                                  repeat, howmanyqueries);
@@ -155,7 +155,7 @@ void demofixed(const uint64_t howmany, const float loadfactor, const float repea
     std::cout << "We repeat with " << repeat << " different hash functions, using the same keys." << std::endl;
 
     ForEachT<
-        Cyclic64Pack, Zobrist64Pack, WZobrist64Pack, MultiplyShift64Pack,
+        CRC32_64Pack, Cyclic64Pack, Zobrist64Pack, WZobrist64Pack, MultiplyShift64Pack,
         ClLinear64Pack, MultiplyTwice64Pack, ClQuadratic64Pack,
         MultiplyThrice64Pack, ClCubic64Pack, ClQuartic64Pack,
         ThorupZhangCWCubic64Pack>::template Go<BasicWorker>(keys, loadfactor,
