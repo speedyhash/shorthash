@@ -6,6 +6,7 @@ extern "C" {
 #include "multiply-shift.h"
 #include "tabulated.h"
 #include "crc.h"
+#include "murmur.h"
 }
 
 template <typename WordP, typename RandomnessP,
@@ -64,9 +65,21 @@ struct CRC32_64Pack
     static constexpr auto NAME = "CRC32_64";
 };
 
-struct CRC32Pack
+
+
+ struct CRC32Pack
         : public GenericPack<uint32_t, CRCRandomness, CRCInit, CRC32> {
-    static constexpr auto NAME = "CRC32";
+     static constexpr auto NAME = "CRC32";
+ };
+
+struct Murmur32Pack
+        : public GenericPack<uint32_t, murmur32_t, murmur32_init, murmur32> {
+    static constexpr auto NAME = "Murmur32";
+};
+
+struct Murmur64Pack
+        : public GenericPack<uint64_t, murmur64_t, murmur64_init, murmur64> {
+    static constexpr auto NAME = "Murmur64";
 };
 
 struct Zobrist64Pack

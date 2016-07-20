@@ -64,7 +64,7 @@ int main() {
     const int nbr_trials = 64;
     bool buggy = false;
 
-    ForEachT<Zobrist64Pack, WZobrist64Pack, ZobristTranspose64Pack,
+    ForEachT<Murmur32Pack, CRC32Pack, Murmur64Pack, CRC32_64Pack, Cyclic64Pack, Zobrist64Pack, WZobrist64Pack, ZobristTranspose64Pack,
              MultiplyShift64Pack, ClLinear64Pack, ClQuadratic64Pack,
              ClFastQuadratic64Pack, ClCubic64Pack,
              ClQuartic64Pack, ThorupZhangCWLinear64Pack,
