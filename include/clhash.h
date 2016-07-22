@@ -7,6 +7,36 @@
 
 #include "util.h"
 
+/**************
+* The first function is a custom "bit mixing" function designed to
+* ensure that h(x) and h(x+1) differ as much as possible (in Hamming distance)
+* for a full range of values of x.
+* (D. Lemire, July 22nd 2016)
+******/
+
+typedef struct cl_bitmixing_s {
+    __m128i multiplier; // we only use lower 64-bit
+} cl_bitmixing_t;
+
+void cl_bitmixing_init(cl_bitmixing_t *k) {
+    k->multiplier = _mm_cvtsi64_si128(UINT64_C(0x87d18e568c52ea6d));
+}
+
+// this simply computes A x+B modulo
+__attribute__((always_inline))
+inline uint64_t cl_bitmixing(uint64_t x, const cl_bitmixing_t *t) {
+    __m128i inputasvector = _mm_cvtsi64_si128(x);
+    __m128i product = _mm_clmulepi64_si128(inputasvector, t->multiplier, 0x00);
+    __m128i shifted_product = _mm_srli_si128(product,4);
+    return _mm_cvtsi128_si64(shifted_product);
+}
+
+
+
+
+
+
+
 /**
 * We start with some modulo functions
 */
