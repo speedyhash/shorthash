@@ -208,7 +208,7 @@ int main() {
            "ind., cubic is 4-wise ind.\n");
     printf("Keys are flushed at the beginning of each run.\n");
     const vector<uint32_t> sizes{10, 20, 100, 1000, 10000, 100000,1000000};
-    basic<ClBitMixing64Pack, Murmur64Pack, CRC32_64Pack, Cyclic64Pack, Zobrist64Pack, WZobrist64Pack, ZobristTranspose64Pack,
+    basic<BitMixing64Pack, ClBitMixing64Pack, Murmur64Pack, CRC32_64Pack, Cyclic64Pack, Zobrist64Pack, WZobrist64Pack, ZobristTranspose64Pack,
           ThorupZhang64Pack, MultiplyShift64Pack, ClLinear64Pack,
           MultiplyTwice64Pack, ClQuadratic64Pack, ClFastQuadratic64Pack,
           ClCubic64Pack, ClQuartic64Pack, ThorupZhangCWLinear64Pack,

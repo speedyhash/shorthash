@@ -105,6 +105,11 @@ struct ZobristTranspose64Pack
 };
 
 
+struct BitMixing64Pack
+        : public GenericPack<uint64_t, bitmixing_t, bitmixing_init, bitmixing> {
+    static constexpr auto NAME = "BM64";
+};
+
 struct ClBitMixing64Pack
         : public GenericPack<uint64_t, cl_bitmixing_t, cl_bitmixing_init, cl_bitmixing> {
     static constexpr auto NAME = "ClBM64";

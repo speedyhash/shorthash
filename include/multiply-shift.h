@@ -5,6 +5,23 @@
 
 #include "util.h"
 
+
+
+typedef struct bitmixing_s {
+    uint64_t multiplier;
+} bitmixing_t;
+
+void bitmixing_init(bitmixing_t *k) {
+    k->multiplier = UINT64_C(15185512759463952534);
+}
+
+// this simply computes A x+B modulo
+__attribute__((always_inline))
+inline uint64_t bitmixing(uint64_t x, const bitmixing_t *t) {
+  return (t->multiplier * x ) >> 32;
+}
+
+
 /**
 * The compiler is probably smart enough to do it right, but if not:
 
