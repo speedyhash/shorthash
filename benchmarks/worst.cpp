@@ -41,7 +41,8 @@ int main() {
   iota(data.begin(), data.end(), 0);
   vector<pair<size_t, uint16_t> > functions;
   for (uint32_t i = 0; i < (1 << 16); ++i) {
-    functions.emplace_back(SearchTime(MultiplyOnly8Pack(i), 1 << 8, data), i);
+      functions.emplace_back(
+          SearchTime(MultiplyOnly8Pack(i), Modulo64, 1 << 8, data), i);
   }
   sort(functions.begin(), functions.end(),
        std::greater<pair<size_t, uint16_t>>());

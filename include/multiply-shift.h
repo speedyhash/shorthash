@@ -54,6 +54,19 @@ inline uint64_t MultiplyShift64(uint64_t in, const MultiplyShift64Randomness * r
 }
 
 typedef struct {
+  uint64_t mult;
+} UnivMultiplyShift64Randomness;
+
+void UnivMultiplyShift64Init(UnivMultiplyShift64Randomness *x) {
+  x->mult = 1 | get64rand();
+}
+
+__attribute__((always_inline))
+inline uint64_t UnivMultiplyShift64(uint64_t in, const UnivMultiplyShift64Randomness * rand) {
+  return in * rand->mult;
+}
+
+typedef struct {
   uint128_t mult1, mult2;
 } MultiplyTwice64Randomness;
 

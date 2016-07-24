@@ -131,6 +131,12 @@ struct MultiplyShift64Pack
     static constexpr auto NAME = "MS64";
 };
 
+struct UnivMultiplyShift64Pack
+        : public GenericPack<uint64_t, UnivMultiplyShift64Randomness,
+          UnivMultiplyShift64Init, UnivMultiplyShift64> {
+    static constexpr auto NAME = "UMS64";
+};
+
 struct MultiplyTwice64Pack
         : public GenericPack<uint64_t, MultiplyTwice64Randomness,
           MultiplyTwice64Init, MultiplyTwice64> {
