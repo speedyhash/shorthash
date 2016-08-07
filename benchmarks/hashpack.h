@@ -258,6 +258,48 @@ struct Toeplitz64Pack
     static constexpr auto NAME = "Toeplitz64";
 };
 
+template <typename Splitter, typename Finalizer, size_t WIDTH>
+struct SplitPack {
+  static constexpr auto NAME = "Split";
+    typedef typename Splitter::Word Word;
+    struct Randomness {
+        typename Splitter::Randomness splitter;
+        typename Finalizer::Randomness finalizers[WIDTH];
+    };
+
+    static inline void InitRandomness(Randomness *r) {
+        Splitter::InitRandomness(&r->splitter);
+        for (size_t i = 0; i < WIDTH; ++i) {
+            Finalizer::InitRandomness(&r->finalizers[i]);
+        }
+    }
+
+    __attribute__((always_inline)) static inline Word
+        HashFunction(Word x, const Randomness *r) {
+        const auto i = Splitter::HashFunction(x, &r->splitter) % WIDTH;
+        return Finalizer::HashFunction(x, &r->finalizers[i]);
+    }
+
+    /**
+    * We want SplitPack to be usable as a C++ hasher
+    */
+    SplitPack() : myr(NULL) {
+        myr = std::shared_ptr<Randomness>(new Randomness());
+        if (myr != NULL) {
+            InitRandomness(myr.get());
+        }
+    }
+
+    SplitPack(const SplitPack &o) : myr(o.myr) {}
+
+    __attribute__((always_inline)) inline size_t operator()(Word x) const {
+        return HashFunction(x, myr.get());
+    }
+
+  protected:
+    std::shared_ptr<Randomness> myr;
+};
+
 template <typename... Pack>
 struct ForEachT {
     template <typename Worker, typename... Args>
