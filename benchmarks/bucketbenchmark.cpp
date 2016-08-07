@@ -80,7 +80,9 @@ int main() {
                  << " Mod" << endl;
             demofixed<Cyclic64Pack, Zobrist64Pack, MultiplyShift64Pack,
                       UnivMultiplyShift64Pack, ClLinear64Pack,
-                      ThorupZhangCWCubic64Pack, MultiplyTwice64Pack>(mod, size);
+                      ThorupZhangCWCubic64Pack, Linear64Pack, Toeplitz64Pack,
+                      SplitPack<MultiplyShift64Pack, MultiplyShift64Pack, 64> >(
+                mod, size);
         }
     }
 }
