@@ -7,6 +7,7 @@ extern "C" {
 #include "tabulated.h"
 #include "crc.h"
 #include "murmur.h"
+#include "linear.h"
 }
 
 template <typename WordP, typename RandomnessP,
@@ -243,6 +244,18 @@ struct MultiplyOnly8Pack
           MultiplyOnly8Init, MultiplyOnly8> {
     static constexpr auto NAME = "Mo8";
     explicit MultiplyOnly8Pack(const uint16_t v) { myr->mult = v; }
+};
+
+struct Linear64Pack
+        : public GenericPack<uint64_t, Linear64Randomness,
+          Linear64Init, Linear64> {
+    static constexpr auto NAME = "Linear64";
+};
+
+struct Toeplitz64Pack
+        : public GenericPack<uint64_t, Toeplitz64Randomness,
+          Toeplitz64Init, Toeplitz64> {
+    static constexpr auto NAME = "Toeplitz64";
 };
 
 template <typename... Pack>
