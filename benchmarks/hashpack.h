@@ -101,6 +101,7 @@ struct Koloboke64Pack
     static constexpr auto NAME = "Koloboke64";
 };
 
+
 struct Zobrist64Pack
         : public GenericPack<uint64_t, zobrist_t, zobrist_init, zobrist> {
     static constexpr auto NAME = "Zobrist64";

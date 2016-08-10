@@ -119,7 +119,7 @@ struct BasicWorker {
     static inline void Stop() {}
 };
 
-#define MYHASHER Murmur64Pack, Stafford64Pack, xxHash64Pack, BitMixing64Pack, Koloboke64Pack, Cyclic64Pack, Zobrist64Pack,  WZobrist64Pack, ClCubic64Pack , ThorupZhangCWCubic64Pack, MultiplyShift64Pack, ClLinear64Pack, Linear64Pack, Toeplitz64Pack, SplitPack<MultiplyShift64Pack, MultiplyShift64Pack,64>
+#define MYHASHER CRC32_64Pack, Murmur64Pack, Stafford64Pack, xxHash64Pack, BitMixing64Pack, Koloboke64Pack, Cyclic64Pack, Zobrist64Pack,  WZobrist64Pack, ClCubic64Pack , ThorupZhangCWCubic64Pack, MultiplyShift64Pack, ClLinear64Pack, Linear64Pack, Toeplitz64Pack, SplitPack<MultiplyShift64Pack, MultiplyShift64Pack,64>
 
 
 void demorandom(const uint64_t howmany, const float loadfactor,
@@ -175,23 +175,71 @@ void demofixed(const uint64_t howmany, const uint32_t gap, const float loadfacto
 
 }
 
+uint64_t reversebits(uint64_t v) {
+  uint64_t r = v; // r will be reversed bits of v; first get LSB of v
+  int s = sizeof(v) * CHAR_BIT - 1; // extra shift needed at end
+ for (v >>= 1; v; v >>= 1) {
+  r <<= 1;
+  r |= v & 1;
+  s--;
+ }
+ r <<= s; // shift when v's highest bits are zero
+ return r;
+}
+
+void demofillfromtop(const uint64_t howmany, const float loadfactor,  uint32_t repeat,const size_t howmanyqueries) {
+    srand(0);
+    std::vector<std::vector<uint64_t> > allkeys;
+    for(size_t r = 0; r < repeat; ++r)  {
+      std::vector<uint64_t>  keys;
+      for(uint64_t i = 0; i <= howmany; ++i) {
+        keys.push_back(reversebits(i));
+      }
+      std::shuffle(keys.begin(), keys.end(),g);
+      allkeys.push_back(keys);
+    }
+
+    std::cout << "populating a hash table with filled from the top and then retrieving them. " << std::endl;
+    std::cout << "load factor = " << loadfactor << std::endl;
+    std::cout << "number of consecutive queries on same hash table = " << howmanyqueries << std::endl;
+
+    std::cout << "We repeat with " << repeat << " different hash functions, using the different keys." << std::endl;
+    ForEachT<MYHASHER>::template Go<BasicWorker>(allkeys, loadfactor,
+                                                            repeat,
+                                                            howmanyqueries);
+    std::cout << std::endl;
+
+}
 
 int main() {
     const float loadfactor = 0.9;
     const float repeat = 100;
     const size_t howmanyqueries = 10;
-
-    for(int size = 2000; size < 120000; size*= 2)
-      demofixed(size, 1, loadfactor,  repeat, howmanyqueries);
-
+    const int maxsize = 8000;//128000;
 
     std::cout << "=======" << std::endl;
 
-    for(int size = 2000; size < 120000; size*= 2)
+    for(int size = 2000; size <= maxsize; size*= 2)
+      demofixed(size, 1, loadfactor,  repeat, howmanyqueries);
+
+    std::cout << "=======" << std::endl;
+
+    for(int size = 2000; size <=maxsize; size*= 2)
+      demofillfromtop(size, loadfactor,  repeat, howmanyqueries);
+
+    std::cout << "=======" << std::endl;
+
+    for(int size = 2000; size <= maxsize; size*= 2)
+      demofixed(size, 1<<16, loadfactor,  repeat, howmanyqueries);
+
+    std::cout << "=======" << std::endl;
+
+    for(int size = 2000; size <= maxsize; size*= 2)
       demofixed(size, 1<<31, loadfactor,  repeat, howmanyqueries);
 
     std::cout << "=======" << std::endl;
-    for(int size = 2000; size < 120000; size*= 2)
+
+    for(int size = 2000; size <= maxsize; size*= 2)
       demorandom(size, loadfactor,  repeat, howmanyqueries);
 
 }
