@@ -56,5 +56,47 @@ uint64_t murmur64(uint64_t h, const murmur64_t * key) {
   return h;
 }
 
+//http://zimbry.blogspot.ca/2011/09/better-bit-mixing-improving-on.html
+void staffordmix01_init(murmur64_t *key) {
+  key->shift1 = 31;
+  key->shift2 = 27;
+  key->shift3 = 33;
+  key->multiplier1 = UINT64_C(0x7fb5d329728ea185);
+  key->multiplier2 = UINT64_C(0x81dadef4bc2dd44d);
+}
+
+void xxhash_init(murmur64_t *key) {
+  key->shift1 = 33;
+  key->shift2 = 29;
+  key->shift3 = 32;
+  key->multiplier1 = UINT64_C(4029467366897019727);
+  key->multiplier2 = UINT64_C(1609587929392839161);
+}
+
+
+/*
+* koloboke is commonly used in java (e.g., from fastutil)
+*/
+typedef struct {
+  int shift1;
+  int shift2;
+  uint64_t multiplier;
+} koloboke_t;
+
+void koloboke_init(koloboke_t *key) {
+  key->shift1 = 32;
+  key->shift2 = 16;
+  key->multiplier = UINT64_C(0x9E3779B97F4A7C15);
+}
+
+uint64_t koloboke64(uint64_t h, const koloboke_t * key) {
+  h *= key->multiplier;
+  h ^= h >> key->shift1;
+  h ^= h >> key->shift2;
+  return h;
+}
+
+
+
 
 #endif

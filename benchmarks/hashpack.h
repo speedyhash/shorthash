@@ -83,6 +83,24 @@ struct Murmur64Pack
     static constexpr auto NAME = "Murmur64";
 };
 
+
+struct Stafford64Pack
+        : public GenericPack<uint64_t, murmur64_t, staffordmix01_init, murmur64> {
+    static constexpr auto NAME = "stafford64";
+};
+
+
+struct xxHash64Pack
+        : public GenericPack<uint64_t, murmur64_t, xxhash_init, murmur64> {
+    static constexpr auto NAME = "xxHash64";
+};
+
+
+struct Koloboke64Pack
+        : public GenericPack<uint64_t, koloboke_t, koloboke_init, koloboke64> {
+    static constexpr auto NAME = "Koloboke64";
+};
+
 struct Zobrist64Pack
         : public GenericPack<uint64_t, zobrist_t, zobrist_init, zobrist> {
     static constexpr auto NAME = "Zobrist64";

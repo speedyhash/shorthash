@@ -12,8 +12,8 @@ else
 FLAGS = $(SHARED_FLAGS) -O3
 endif # debug
 
-CFLAGS = $(FLAGS) -std=c99
-CXXFLAGS = $(FLAGS) -std=c++11
+#CFLAGS = $(FLAGS) -std=c99
+CXXFLAGS =  $(FLAGS) -std=c++11
 
 all: benchmark.exe htbenchmark.exe bucketbenchmark.exe \
     linearprobebenchmark.exe cw-trick-test.exe collision-test.exe worst.exe \
