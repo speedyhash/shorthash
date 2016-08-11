@@ -20,8 +20,8 @@ void murmur32_init(murmur32_t *key) {
   key->multiplier2 = UINT32_C(0xc2b2ae35);
 }
 
-
-uint32_t murmur32(uint32_t h, const murmur32_t * key) {
+__attribute__((always_inline))
+inline uint32_t murmur32(uint32_t h, const murmur32_t * key) {
   h ^= h >> key->shift1;
   h *= key->multiplier1;
   h ^= h >> key->shift2;
@@ -47,7 +47,8 @@ void murmur64_init(murmur64_t *key) {
   key->multiplier2 = UINT64_C(0xc4ceb9fe1a85ec53);
 }
 
-uint64_t murmur64(uint64_t h, const murmur64_t * key) {
+__attribute__((always_inline))
+inline uint64_t murmur64(uint64_t h, const murmur64_t * key) {
   h ^= h >> key->shift1;
   h *= key->multiplier1;
   h ^= h >> key->shift2;
@@ -88,8 +89,8 @@ void koloboke_init(koloboke_t *key) {
   key->shift2 = 16;
   key->multiplier = UINT64_C(0x9E3779B97F4A7C15);
 }
-
-uint64_t koloboke64(uint64_t h, const koloboke_t * key) {
+__attribute__((always_inline))
+inline uint64_t koloboke64(uint64_t h, const koloboke_t * key) {
   h *= key->multiplier;
   h ^= h >> key->shift1;
   h ^= h >> key->shift2;

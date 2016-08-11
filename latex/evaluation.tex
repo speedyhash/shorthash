@@ -84,38 +84,52 @@ In random hashing,
 we pick a hash function  at random in a family of
 hash functions.  A family  is
   \emph{universal}~\cite{carter1979universal} if
- $P\left (h(x)=h(x')\right )\leq 1/2^64$
+ $P\left (h(x)=h(x')\right )\leq 1/2^{64}$
 for any $x,x'$ such that $x \neq x'$.
 A family is $k$-wise independent~\cite{lemi:one-pass-journal,Lemire2012604} if given  $k$~distinct values $x_1,x_2, \ldots, x_k$ (with $k>1$), their hash
 values are independent: \begin{eqnarray*}
 P\left (h(x_1)= y_1  \; \land  \; h(x_2)= y_2 \; \land  \; \cdots \; \land  \; h(x_k)= y_k  \right ) =\frac{1}{2^{64k}}\end{eqnarray*}
-for any hash values $y,y'$. 
+for any hash values $y_1,y_2,\ldots, y_k$. 
+
+
+Families of $k$-wise independent hash functions cannot be made of invertible functions. Indeed, $k$-wise independence states that collisions have to be possible (with the low probability $1/2^{64}$), whereas invertible functions can never exhibit collisions ($h(x) \neq h(x')$ whenever $x\neq x'$).
+
+In fact, if the family is $k$-wise independent, then it must contain functions that are not even $k$-regular (such that $k$~distinct values collide). In this sense, increase $k$-wise independence must come at the expense of regularity.
 
 \subsection{Polynomial hashing}
 Given a field, polynomial hashing using a degree $k-1$ polynomial can achieve $k$-wise independence~\cite{carter1979universal,Thorup:2004:TBH:982792.982884} by the fundamental theorem of algebra.
 
 The hash functions have the form $h(x)=a_{k} x^{k} + \cdots + a_{1} x + a_0$ with the coefficients $a_1, \ldots, a_k$ picked at random in the field. Such a function can be computed efficiently using Horner's rule.
 
-There are two convenient ways to do computations in a field on modern computer. You either do the computations modulo a prime number, or you can use the carryless or polynomial multiplication available on most commodity processors (x64, ARM, POWER). A minor downside of the prime-number approach is that the domain of the hash function is not the full range ($[0,2^{64})$) but a reduced range such as $[0, 2^{61}-1)$ (where $2^{61}-1$ is chosen because it is a Mersenne prime). When working with carryless multiplication, we can use the full range (e.g., by working modulo the irreducible polynomial $1+x+x^3+x^4+x^{64}$).
+There are two convenient ways to do computations in a field on modern computer. You either do the computations modulo a prime number~\cite{carter1979universal,Thorup:2004:TBH:982792.982884}, or you can use the carryless or polynomial multiplication available on most commodity processors (x64, ARM, POWER)~\cite{Lemire2016}.
 
-Even when using carryless multiplications,  polynomial hashing is not invertible in general, because the hash function picked could be (for example) the zero function. But even if we require that the coefficients be non-zero (a very likely occurrence), it is $k-1$-regular at best since a polynomial of degree $k$ has $k-1$ roots. So though higher degree polynomials achieve better independence, they have weaker regularity.
+ A minor downside of the prime-number approach is that the domain of the hash function is not the full range ($[0,2^{64})$) but a reduced range such as $[0, 2^{61}-1)$ (where $2^{61}-1$ is chosen because it is a Mersenne prime). 
+ 
+ When working with carryless multiplication, we can use the full range (e.g., by working modulo the irreducible polynomial $1+x+x^3+x^4+x^{64}$).
+
 
 
 \subsection{Zobrist hashing}
 
 
 Zobrist hashing~\cite{zobrist1970, zobrist1990new,thorup2012tabulation,Patrascu:2012:PST:2220357.2220361} is 3-wise independent. It is defined as follows. Pick $w$ that divides 64 (such as $w=8$ or $w=16$).
-Consider the family $\mathcal{F}$ of all possible functions $2^w \to [0,2^64)$. There are ${2^64}^{2^w}$ such functions, so that they can each be represented using $2^w 64$~bits. Pick $64/w$~functions $f_1, f_2, \ldots, f_{64/w}$. The total memory usage is $2^w 64^2/w$~bits. 
+Consider the family $\mathcal{F}$ of all possible functions $2^w \to [0,2^{64})$. There are ${2^{64}}^{2^w}$ such functions, so that they can each be represented using $2^w 64$~bits. Pick $64/w$~functions $f_1, f_2, \ldots, f_{64/w}$. The total memory usage is $2^w 64^2/w$~bits. 
 Given a 64-bit word $X$, we can break it into $64/w$ $w$-bit subwords $X_1,X_2, \ldots, X_{64/w}$, 
 the hash function is given by $ f_1(X_1) \xor \cdots \xor  f_{64/w}(X_{64/w})$ where $\xor{}$ is the bitwise exclusive or. Though Zobrist hashing offers strong universality, it may require a lot of memory. Setting aside the issue of cache misses, current x64 processors cannot sustain more than two memory loads per cycle which puts an upper bound on the speed of Zobrist hashing.
 
-Zobrist hashing functions are not invertible.
+As expected, Zobrist hashing functions are not invertible.
 If we pick $2^{64}$ values at random in a range of $2^{64}$ values, each value in the domain is never picked with probability $(2^{64}-1)/2^{64}$ and so it is picked with probability  $1-(2^{64}-1)/2^{64} \approx (1-1/e) \approx 0.6$. This means that we should not expect Zobrist hash functions to cover much more than two thirds of their image.
 
 \section{Deterministic hash function}
 
-A deterministic hash function does not rely on randomness.
-Given any deterministic hash function, it is always possible to prepare a set of keys where, for example, collisions are frequent. However, if we do not face an adversary capable of determining the values to be hashed, we might be able to  safely use deterministic hash functions. Note that deterministic hash functions can be composed with random hash functions for added security, if they are invertible they are not going to affect $k$-wise independnece.
+
+In some applications, random hashing is simply not an option: consider an index on disk. Picking a new hash function regularly might imply having to rewrite all indexes.
+In these cases, a deterministic hash function is preferable.
+
+Given any deterministic hash function, it is always possible to prepare a set of keys where, for example, collisions are frequent. However, if we do not face an adversary capable of determining the values to be hashed, we might be able to  safely use known deterministic hash functions. 
+
+Deterministic hash functions can be composed with random hash functions for added security, if they are invertible they are not going to affect $k$-wise independence.
+
 
 We only consider fast invertible functions.
 
@@ -142,10 +156,8 @@ Vigna in his fastutil library uses the following bit mixing functions which he a
 \begin{lstlisting}
 h = x * 0x9e3779b97f4a7c15;
 h ^= h >>> 32;
-h ^ (h >>> 16);
+h ^= (h >>> 16);
 \end{lstlisting}
-
-
 
 
 \section{Experiments}
@@ -155,7 +167,7 @@ h ^ (h >>> 16);
 Hash functions we should include:
 \begin{itemize}
 \item the identity hash function? 
-\item Zobrist (as promoted by Thorup, so it is what I call WZob64)
+\item Zobrist (as implemented by Thorup, so it is what I call WZob64)
 \item  the Appleby's murmurhash64 bit-mixing hash function (non random)
 \item Leventov (non random)
 \item ClLinear64
@@ -177,7 +189,9 @@ Use recent Intel processor (skylake).
 
 Given an array of $x$ keys, how fast can we hash them? Some schemes like Zobrist greatly benefit (due to data locality) when we hash long sequences of keys, as the random bits remain in cache.
 
+Check that the identity function is super fast. How many cycles should it take?
 
+Compensate for function-call and timing overhead ($\approx 30$~cycles).
 
 \subsection{Random keys}
 
@@ -206,6 +220,13 @@ speed in a hash map under linear probing with different load factors and number 
 \subsection{Reversed-Bit Geometric Sequences}
 
 Same as geometric sequences, but reverse the bit and or byte order.
+
+
+
+\subsection{Echoed Bits}
+
+
+Maybe try with $w$-bit values $x$, echoed $x | (x<<w) |...$ in this manner. The cases $w=8, w=16, w=32, w=33$ are particularly interesting.
 
 \section{Conclusion}
 
