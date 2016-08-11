@@ -5,6 +5,7 @@ typedef struct {
 } identity_t;
 
 void identity_init(identity_t *key) {
+  (void) key;
 }
 
 
