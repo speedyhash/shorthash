@@ -8,6 +8,7 @@ extern "C" {
 #include "crc.h"
 #include "murmur.h"
 #include "linear.h"
+#include "identity.h"
 }
 
 template <typename WordP, typename RandomnessP,
@@ -47,6 +48,11 @@ public:
 
   protected:
     std::shared_ptr<Randomness> myr;
+};
+
+struct Identity64Pack
+        : public GenericPack<uint64_t, identity_t, identity_init, identity64> {
+    static constexpr auto NAME = "Identity64";
 };
 
 

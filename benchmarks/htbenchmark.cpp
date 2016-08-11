@@ -119,7 +119,7 @@ struct BasicWorker {
     static inline void Stop() {}
 };
 
-#define MYHASHER CRC32_64Pack, Murmur64Pack, Stafford64Pack, xxHash64Pack, BitMixing64Pack, Koloboke64Pack, Cyclic64Pack, Zobrist64Pack,  WZobrist64Pack, ClCubic64Pack , ThorupZhangCWCubic64Pack, MultiplyShift64Pack, ClLinear64Pack, Linear64Pack, Toeplitz64Pack, SplitPack<MultiplyShift64Pack, MultiplyShift64Pack,64>
+#define MYHASHER Identity64Pack,CRC32_64Pack, Murmur64Pack, Stafford64Pack, xxHash64Pack, BitMixing64Pack, Koloboke64Pack, Cyclic64Pack, Zobrist64Pack,  WZobrist64Pack, ClCubic64Pack , ThorupZhangCWCubic64Pack, MultiplyShift64Pack, ClLinear64Pack, Linear64Pack, Toeplitz64Pack, SplitPack<MultiplyShift64Pack, MultiplyShift64Pack,64>
 
 
 void demorandom(const uint64_t howmany, const float loadfactor,
