@@ -22,7 +22,6 @@ void cl_bitmixing_init(cl_bitmixing_t *k) {
     k->multiplier = _mm_cvtsi64_si128(UINT64_C(9725821133278607468));
 }
 
-// this simply computes A x+B modulo
 __attribute__((always_inline))
 inline uint64_t cl_bitmixing(uint64_t x, const cl_bitmixing_t *t) {
     __m128i inputasvector = _mm_cvtsi64_si128(x);
