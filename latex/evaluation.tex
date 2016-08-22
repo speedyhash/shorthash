@@ -1,0 +1,245 @@
+\documentclass{article}
+
+\usepackage{listings}
+\usepackage{booktabs}
+\newcommand\xor{\wedge}
+
+\usepackage{microtype}
+\usepackage{inconsolata}
+%\usepackage{minted}
+%\usepackage[scaled]{beramono}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata,decorations.markings,positioning,calc}
+
+\lstdefinestyle{customc}{%
+  belowcaptionskip=1\baselineskip,
+  breaklines=true,
+  xleftmargin=\parindent,
+  language=C,
+  showstringspaces=false,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\bfseries\color{green!40!black},
+  numberstyle=\tiny,
+  stepnumber=2, numbersep=5pt
+  commentstyle=\itshape\color{purple!40!black},
+  identifierstyle=\bfseries\color{black},
+  stringstyle=\color{orange},
+   morekeywords={uint64_t,uint32_t,__m256i,__m128i,UINT64_C},
+}
+\lstset{escapechar=@,style=customc}
+
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage{underscore}
+\usepackage{siunitx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage{algorithm}
+\usepackage[noend]{algorithmic}
+%%% you can use the following comments for nice comments:
+\newcommand{\daniel}[1]{\todo[backgroundcolor=blue!20!white]{#1}}
+\newcommand{\danielinline}[1]{\todo[inline,backgroundcolor=blue!20!white]{#1}}
+%%% end of nice comments
+\usepackage{graphicx}
+
+
+%%%%%%%%%%% Title of the paper
+\title{Experimental evaluation of integer hash functions}
+\author{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Hash functions are ubiquitous in software. Some data structures, such as hash tables with linear probing under high load factors, require high-quality hash functions. A common strategy is to first hash the keys down to a machine word, before applying a well-tested hash function on this word. We review experimentally several of these candidate hash functions on recent 64-bit Intel processors. We find that \ldots [to be completed]
+\end{abstract}
+\lstset{escapechar=@,style=customc}
+
+%http://burtleburtle.net/bob/hash/integer.html
+
+Most programming languages provide hash functions and hash tables. A hash function maps keys to fixed-length values. For example, most C++ implementations have hash functions (\texttt{std::hash}) producing 64-bit values on 64-bit systems.
+
+We expect data objects to be mapped
+evenly over the possible hash values. 
+Many hash functions are invertible, meaning that, for example, they hash  $2^{64}$~values to all possible $2^{64}$~values. We can generalize this analysis: given a hash function from $X$ to $Y$, we say that it is \emph{$K$-regular} if $h(x) = y$ is true for at most $K \lceil |Y| / |X| \rceil $~values $x\in X$ given a fixed $y\in Y$.
+
+(present linear probing here and explain why it can be terrible under a bad hash function.)
+
+One popular requirement inspired by cryptography is the ``avalanche effect'' meaning that if the Hamming distance between $x$ and $y$ is 1, then the probability that any one given bit differs between  $h(x)$ and $h(y)$ is, on average, 50\% (picking $x$ and $y$ at random). We cannot achieve both invertibility and the avalanche effect.\footnote{\url{https://github.com/lemire/Code-used-on-Daniel-Lemire-s-blog/blob/master/extra/bitmixing/bruteforce.py}}
+
+In what follows, we do not consider cryptographic applications where, for example, we might require hash functions to be difficult to invert. We also do not pursue security concerns where, for example, an adversary might attempt to degrade the performance of the system by choosing ``bad'' keys. 
+
+
+In the paper, for each presented hash function, discuss invertibility.
+
+
+%Make things as simple as possible, but not simpler. (Einstein)
+
+(Note: libcuckoo uses cityhash. https://github.com/efficient/libcuckoo)
+
+(Ref: On worst case Robin-Hood hashing)
+
+\section{Random hashing}
+
+
+In random hashing, 
+we pick a hash function  at random in a family of
+hash functions.  A family  is
+  \emph{universal}~\cite{carter1979universal} if
+ $P\left (h(x)=h(x')\right )\leq 1/2^{64}$
+for any $x,x'$ such that $x \neq x'$.
+A family is $k$-wise independent~\cite{lemi:one-pass-journal,Lemire2012604} if given  $k$~distinct values $x_1,x_2, \ldots, x_k$ (with $k>1$), their hash
+values are independent: \begin{eqnarray*}
+P\left (h(x_1)= y_1  \; \land  \; h(x_2)= y_2 \; \land  \; \cdots \; \land  \; h(x_k)= y_k  \right ) =\frac{1}{2^{64k}}\end{eqnarray*}
+for any hash values $y_1,y_2,\ldots, y_k$. 
+
+
+Families of $k$-wise independent hash functions cannot be made of invertible functions. Indeed, $k$-wise independence states that collisions have to be possible (with the low probability $1/2^{64}$), whereas invertible functions can never exhibit collisions ($h(x) \neq h(x')$ whenever $x\neq x'$).
+
+In fact, if the family is $k$-wise independent, then it must contain functions that are not even $k$-regular (such that $k$~distinct values collide). In this sense, increase $k$-wise independence must come at the expense of regularity.
+
+\subsection{Polynomial hashing}
+Given a field, polynomial hashing using a degree $k-1$ polynomial can achieve $k$-wise independence~\cite{carter1979universal,Thorup:2004:TBH:982792.982884} by the fundamental theorem of algebra.
+
+The hash functions have the form $h(x)=a_{k} x^{k} + \cdots + a_{1} x + a_0$ with the coefficients $a_1, \ldots, a_k$ picked at random in the field. Such a function can be computed efficiently using Horner's rule.
+
+There are two convenient ways to do computations in a field on modern computer. You either do the computations modulo a prime number~\cite{carter1979universal,Thorup:2004:TBH:982792.982884}, or you can use the carryless or polynomial multiplication available on most commodity processors (x64, ARM, POWER)~\cite{Lemire2016}.
+
+ A minor downside of the prime-number approach is that the domain of the hash function is not the full range ($[0,2^{64})$) but a reduced range such as $[0, 2^{61}-1)$ (where $2^{61}-1$ is chosen because it is a Mersenne prime). 
+ 
+ When working with carryless multiplication, we can use the full range (e.g., by working modulo the irreducible polynomial $1+x+x^3+x^4+x^{64}$).
+
+
+
+\subsection{Zobrist hashing}
+
+
+Zobrist hashing~\cite{zobrist1970, zobrist1990new,thorup2012tabulation,Patrascu:2012:PST:2220357.2220361} is 3-wise independent. It is defined as follows. Pick $w$ that divides 64 (such as $w=8$ or $w=16$).
+Consider the family $\mathcal{F}$ of all possible functions $2^w \to [0,2^{64})$. There are ${2^{64}}^{2^w}$ such functions, so that they can each be represented using $2^w 64$~bits. Pick $64/w$~functions $f_1, f_2, \ldots, f_{64/w}$. The total memory usage is $2^w 64^2/w$~bits. 
+Given a 64-bit word $X$, we can break it into $64/w$ $w$-bit subwords $X_1,X_2, \ldots, X_{64/w}$, 
+the hash function is given by $ f_1(X_1) \xor \cdots \xor  f_{64/w}(X_{64/w})$ where $\xor{}$ is the bitwise exclusive or. Though Zobrist hashing offers strong universality, it may require a lot of memory. Setting aside the issue of cache misses, current x64 processors cannot sustain more than two memory loads per cycle which puts an upper bound on the speed of Zobrist hashing.
+
+As expected, Zobrist hashing functions are not invertible.
+If we pick $2^{64}$ values at random in a range of $2^{64}$ values, each value in the domain is never picked with probability $(2^{64}-1)/2^{64}$ and so it is picked with probability  $1-(2^{64}-1)/2^{64} \approx (1-1/e) \approx 0.6$. This means that we should not expect Zobrist hash functions to cover much more than two thirds of their image.
+
+\section{Deterministic hash function}
+
+
+In some applications, random hashing is simply not an option: consider an index on disk. Picking a new hash function regularly might imply having to rewrite all indexes.
+In these cases, a deterministic hash function is preferable.
+
+Given any deterministic hash function, it is always possible to prepare a set of keys where, for example, collisions are frequent. However, if we do not face an adversary capable of determining the values to be hashed, we might be able to  safely use known deterministic hash functions. 
+
+Deterministic hash functions can be composed with random hash functions for added security, if they are invertible they are not going to affect $k$-wise independence.
+
+
+We only consider fast invertible functions.
+
+% https://github.com/jandrewrogers/MetroHash/blob/master/src/metrohash64.cpp
+
+\subsection{MurmurHash}
+
+Popular bit-mixing function (or ``finalizers``) were designed by Austin	Appleby for the MurmurHash family\footnote{\url{https://github.com/aappleby/smhasher/wiki/MurmurHash3}}:
+
+
+\begin{lstlisting}
+h ^= h >> 33;
+h *= 0xff51afd7ed558ccd;
+h ^= h >> 33;
+h *= 0xc4ceb9fe1a85ec53;
+h ^= h >> 33;
+\end{lstlisting}
+
+It is invertible and was determined, empirically, to have an almost perfect avalanche effect.
+
+\subsection{Koloboke}
+
+Vigna in his fastutil library uses the following bit mixing functions which he attributes to  Roman Leventov's Koloboke
+
+
+\begin{lstlisting}
+h = x * 0x9e3779b97f4a7c15;
+h ^= h >>> 32;
+h ^= (h >>> 16);
+\end{lstlisting}
+
+
+\section{Experiments}
+
+
+
+Hash functions we should include:
+\begin{itemize}
+\item the identity hash function? 
+\item Zobrist (as implemented by Thorup, so it is what I call WZob64)
+\item  the Appleby's murmurhash64 bit-mixing hash function (non random)
+\item Leventov (non random)
+\item ClLinear64
+\item TCWLinear64
+\item ClCubic64
+\item TCWCubic64~\cite{Thorup:2004:TBH:982792.982884}
+\item \ldots 
+\end{itemize}
+
+
+
+There are various ways to cast an integer down to a range (The postprocessing step). You can assume that the range fits a power of two (convenient) and just mask everything but the last few bits. Or you can shift right the value and effectively use the most significant bits.
+
+If the range is not a power of two, you can use a modulo reduction, but that's painful.  We can instead use a multiplication followed by a shift.\footnote{\url{http://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/}} 
+
+\subsection{Speed}
+
+Use recent Intel processor (skylake).
+
+Given an array of $x$ keys, how fast can we hash them? Some schemes like Zobrist greatly benefit (due to data locality) when we hash long sequences of keys, as the random bits remain in cache.
+
+Check that the identity function is super fast. How many cycles should it take?
+
+Compensate for function-call and timing overhead ($\approx 30$~cycles).
+
+\subsection{Random keys}
+
+This is probably the least interesting case, but it should be included.
+
+Assess number of collisions.
+Assess average probing distance, 
+maximum average probing distance, 
+average maximum probing distance, 
+speed in a hash map under linear probing with different load factors and number of keys. Make sure that as the number of keys increase the load factor remains fixed.
+
+\subsection{Geometric Sequences}
+
+We want to check the hash functions with keys that are geometric sequences. We want to test a wide range of ``gaps'' and starting points to see if it exposes problems. 
+
+Refer to appendix~A from~\cite{Patrascu:2012:PST:2220357.2220361} for motivation.
+
+Shuffle the keys if needed?
+
+Assess number of collisions.
+Assess average probing distance, 
+maximum average probing distance, 
+average maximum probing distance, 
+speed in a hash map under linear probing with different load factors and number of keys.  Make sure that as the number of keys increase the load factor remains fixed.
+
+\subsection{Reversed-Bit Geometric Sequences}
+
+Same as geometric sequences, but reverse the bit and or byte order.
+
+
+
+\subsection{Echoed Bits}
+
+
+Maybe try with $w$-bit values $x$, echoed $x | (x<<w) |...$ in this manner. The cases $w=8, w=16, w=32, w=33$ are particularly interesting.
+
+\section{Conclusion}
+
+We conclude that this paper was too long.
+
+\bibliographystyle{plain}
+\bibliography{hashing} 
+
+
+
+\end{document}
