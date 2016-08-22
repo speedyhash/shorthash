@@ -78,8 +78,9 @@ In the paper, for each presented hash function, discuss invertibility.
 
 (Note: libcuckoo uses cityhash. https://github.com/efficient/libcuckoo)
 
-(Ref: On worst case Robin-Hood hashing --- Robin Hood hashing has log log max probing distance vs. log max probing distance
-for conventional linear probing.)
+(Ref: On worst case Robin-Hood hashing --- random Robin Hood hashing has log log max probing distance vs. log max probing distance
+for conventional linear probing. \url{https://www.pvk.ca/Blog/more_numerical_experiments_in_hashing.html} Analysis does not quite
+hold for linear probing Robin-Hood hashing. Note that Robin-Hood hashing may be harder to access concurrently. )
 
 \section{Random hashing}
 
