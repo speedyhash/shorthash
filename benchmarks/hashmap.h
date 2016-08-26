@@ -29,7 +29,7 @@ SOFTWARE.
 
 namespace rigtorp {
 
-template <typename Key, typename T, typename Hash = std::hash<Key>>
+template <typename Key, typename T, typename Hash = std::hash<Key>, bool robinhood_ = true>
 class HashMap {
 public:
     using key_type = Key;
@@ -158,18 +158,26 @@ public:
         return emplace(value.first, std::move(value.second));
     };
 
-    template <typename... Args>
-    std::pair<iterator, bool> emplace(key_type key, Args &&... args) {
+    template <class MT>
+    std::pair<iterator, bool> emplace(key_type key, MT value) {
         if(key == empty_key_) throw std::runtime_error("can't use the empty key.");
         reserve(size_ + 1);
-        for (size_t idx = key_to_idx(key);; idx = probe_next(idx)) {
+        size_t ideal = key_to_idx(key);
+        size_t keyhash;
+        for (size_t idx = ideal;; idx = probe_next(idx)) {
             if (buckets_[idx].first == empty_key_) {
-                buckets_[idx].second = mapped_type(std::forward<Args>(args)...);
+                buckets_[idx].second = value;
                 buckets_[idx].first = key;
                 size_++;
                 return {iterator(this, idx), true};
             } else if (buckets_[idx].first == key) {
                 return {iterator(this, idx), false};
+            } else if (robinhood_ && (diff(keyhash = key_to_idx(buckets_[idx].first),idx) < diff(idx,ideal))) {// Robin-Hood
+                ideal = keyhash;
+                std::swap(buckets_[idx].first, key);
+                MT tmpv = buckets_[idx].second;
+                buckets_[idx].second = value;
+                value = tmpv;
             }
         }
     };
@@ -236,6 +244,7 @@ public:
             if (buckets_[idx].first == empty_key_) {
                 return end();
             }
+            // todo : could optimize for robin-hood hashing if unsuccessful searches are expected
         }
     }
 
@@ -287,32 +296,19 @@ public:
 private:
 
     size_t key_to_idx(key_type key) const {
-        /* was:  const size_t mask = buckets_.size() - 1;
-          return hasher_(key) & mask;
-        */
-        const uint64_t hash32 = hasher_(key) & UINT64_C(0xFFFFFFFF);
-        const uint64_t siz32 = buckets_.size();
-        return ( hash32 * siz32 ) >> 32; // see http://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/
+        const size_t mask = buckets_.size() - 1;
+        return hasher_(key) & mask;
     }
 
     size_t probe_next(size_t idx) const {
-        /* was:  const size_t mask = buckets_.size() - 1;
-         return (idx + 1) & mask; */
-        size_t nextidx = idx + 1;
-        if(nextidx == buckets_.size()) { // branch rarely taken (cheap)
-          return 0;
-        }
-        return nextidx;
+        const size_t mask = buckets_.size() - 1;
+        return (idx + 1) & mask;
     }
 
 
     size_t diff(size_t a, size_t b) const {
-        /** was : const size_t mask = buckets_.size() - 1;
-        return (buckets_.size() + (a - b)) & mask; */
-        const size_t siz = buckets_.size();
-        const size_t d = a - b + siz;// between 0 and 2 size -1
-        if(d >= buckets_.size()) return d - siz;
-        return d;
+        const size_t mask = buckets_.size() - 1;
+        return (buckets_.size() + (a - b)) & mask;
     }
 
     key_type empty_key_;

@@ -64,6 +64,7 @@ size_t query_max_probed_keys(ht & h, vector<uint64_t> & keys) {
 }
 const uint64_t EMPTY = 0xFFFFFFFFFFFFFFFF;
 
+template <bool robinhood>
 struct BasicWorker {
     template <typename Pack>
     static inline void Go(std::vector<std::vector<uint64_t> > &keys, const float loadfactor,
@@ -78,10 +79,10 @@ struct BasicWorker {
         std::cout << setw(20) << string(Pack::NAME) << " ";
         std::cout.flush();
         uint64_t sum = 0;
-        vector<HashMap<uint64_t, uint32_t, Pack>> collection;
+        vector<HashMap<uint64_t, uint32_t, Pack, robinhood>> collection;
         uint64_t cycles_start, cycles_end;
         for (int r = 0; r < repeat; ++r) {
-            HashMap<uint64_t, uint32_t, Pack> hm(16, EMPTY, loadfactor);
+            HashMap<uint64_t, uint32_t, Pack, robinhood> hm(16, EMPTY, loadfactor);
             cycles_start = RDTSC_START();
             populate(hm, keys[r]);
             cycles_end = RDTSC_FINAL();
@@ -90,7 +91,7 @@ struct BasicWorker {
         }
         double max_avg_probes = 0;
         for (int r = 0; r < repeat; ++r) {
-            HashMap<uint64_t, uint32_t, Pack> &hm = collection[r];
+            HashMap<uint64_t, uint32_t, Pack, robinhood> &hm = collection[r];
             cycles_start = RDTSC_START();
             sum += query(hm, keys[r], howmanyqueries);
             cycles_end = RDTSC_FINAL();
@@ -121,10 +122,11 @@ struct BasicWorker {
 
 #define MYHASHER CRC32_64Pack, Murmur64Pack, Stafford64Pack, xxHash64Pack, ClBitMixing64Pack, BitMixing64Pack, Koloboke64Pack, Cyclic64Pack, Zobrist64Pack,  WZobrist64Pack, ClCubic64Pack , ThorupZhangCWCubic64Pack, MultiplyShift64Pack, ClLinear64Pack, Linear64Pack, Toeplitz64Pack, SplitPack<MultiplyShift64Pack, MultiplyShift64Pack,64>
 
-
+template <bool robinhood = true>
 void demorandom(const uint64_t howmany, const float loadfactor,
                 const float repeat, const size_t howmanyqueries) {
     srand(0);
+    if(robinhood) std::cout << " Robin Hood activated " << std::endl;
     std::vector<std::vector<uint64_t> > allkeys;
     for(size_t r = 0; r < repeat; ++r)  {
       std::vector<uint64_t>  keys;
@@ -142,15 +144,17 @@ void demorandom(const uint64_t howmany, const float loadfactor,
 
     std::cout << "We repeat with " << repeat << " different hash functions, using the different keys." << std::endl;
 
-    ForEachT<MYHASHER>::template Go<BasicWorker>(allkeys,
+    ForEachT<MYHASHER>::template Go<BasicWorker<robinhood> >(allkeys,
                                                                  loadfactor,
                                                                  repeat, howmanyqueries);
     std::cout << std::endl;
 
 }
 
+template <bool robinhood = true>
 void demofixed(const uint64_t howmany, const uint32_t gap, const float loadfactor, const float repeat, const size_t howmanyqueries) {
     srand(0);
+    if(robinhood) std::cout << " Robin Hood activated " << std::endl;
     std::vector<std::vector<uint64_t> > allkeys;
     for(size_t r = 0; r < repeat; ++r)  {
       std::vector<uint64_t>  keys;
@@ -168,7 +172,7 @@ void demofixed(const uint64_t howmany, const uint32_t gap, const float loadfacto
     std::cout << "number of consecutive queries on same hash table = " << howmanyqueries << std::endl;
 
     std::cout << "We repeat with " << repeat << " different hash functions, using the different keys." << std::endl;
-    ForEachT<MYHASHER>::template Go<BasicWorker>(allkeys, loadfactor,
+    ForEachT<MYHASHER>::template Go<BasicWorker<robinhood> >(allkeys, loadfactor,
                                                             repeat,
                                                             howmanyqueries);
     std::cout << std::endl;
@@ -187,8 +191,10 @@ uint64_t reversebits(uint64_t v) {
  return r;
 }
 
+template <bool robinhood = true>
 void demofillfromtop(const uint64_t howmany, const float loadfactor,  uint32_t repeat,const size_t howmanyqueries) {
     srand(0);
+    if(robinhood) std::cout << " Robin Hood activated " << std::endl;
     std::vector<std::vector<uint64_t> > allkeys;
     for(size_t r = 0; r < repeat; ++r)  {
       std::vector<uint64_t>  keys;
@@ -204,7 +210,7 @@ void demofillfromtop(const uint64_t howmany, const float loadfactor,  uint32_t r
     std::cout << "number of consecutive queries on same hash table = " << howmanyqueries << std::endl;
 
     std::cout << "We repeat with " << repeat << " different hash functions, using the different keys." << std::endl;
-    ForEachT<MYHASHER>::template Go<BasicWorker>(allkeys, loadfactor,
+    ForEachT<MYHASHER>::template Go<BasicWorker<robinhood> >(allkeys, loadfactor,
                                                             repeat,
                                                             howmanyqueries);
     std::cout << std::endl;
@@ -216,30 +222,40 @@ int main() {
     const float repeat = 100;
     const size_t howmanyqueries = 10;
     const int maxsize = 8000;//128000;
+    const int minsize = 8000;//128000;
 
     std::cout << "=======" << std::endl;
 
-    for(int size = 2000; size <= maxsize; size*= 2)
-      demofixed(size, 1, loadfactor,  repeat, howmanyqueries);
+    for(int size = minsize; size <= maxsize; size*= 2)
+      demofixed<true>(size, 1, loadfactor,  repeat, howmanyqueries);
+    for(int size = minsize; size <= maxsize; size*= 2)
+      demofixed<false>(size, 1, loadfactor,  repeat, howmanyqueries);
 
     std::cout << "=======" << std::endl;
 
-    for(int size = 2000; size <=maxsize; size*= 2)
-      demofillfromtop(size, loadfactor,  repeat, howmanyqueries);
+    for(int size = minsize; size <=maxsize; size*= 2)
+      demofillfromtop<true>(size, loadfactor,  repeat, howmanyqueries);
+    for(int size = minsize; size <=maxsize; size*= 2)
+      demofillfromtop<false>(size, loadfactor,  repeat, howmanyqueries);
 
     std::cout << "=======" << std::endl;
 
-    for(int size = 2000; size <= maxsize; size*= 2)
-      demofixed(size, 1<<16, loadfactor,  repeat, howmanyqueries);
+    for(int size = minsize; size <= maxsize; size*= 2)
+      demofixed<true>(size, 1<<16, loadfactor,  repeat, howmanyqueries);
+    for(int size = minsize; size <= maxsize; size*= 2)
+      demofixed<false>(size, 1<<16, loadfactor,  repeat, howmanyqueries);
+    std::cout << "=======" << std::endl;
+
+    for(int size = minsize; size <= maxsize; size*= 2)
+      demofixed<true>(size, 1<<31, loadfactor,  repeat, howmanyqueries);
+    for(int size = minsize; size <= maxsize; size*= 2)
+      demofixed<false>(size, 1<<31, loadfactor,  repeat, howmanyqueries);
 
     std::cout << "=======" << std::endl;
 
-    for(int size = 2000; size <= maxsize; size*= 2)
-      demofixed(size, 1<<31, loadfactor,  repeat, howmanyqueries);
-
-    std::cout << "=======" << std::endl;
-
-    for(int size = 2000; size <= maxsize; size*= 2)
-      demorandom(size, loadfactor,  repeat, howmanyqueries);
+    for(int size = minsize; size <= maxsize; size*= 2)
+      demorandom<true>(size, loadfactor,  repeat, howmanyqueries);
+    for(int size = minsize; size <= maxsize; size*= 2)
+      demorandom<false>(size, loadfactor,  repeat, howmanyqueries);
 
 }
