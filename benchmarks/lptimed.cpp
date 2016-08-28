@@ -161,7 +161,7 @@ int main() {
 
     for (int size = minsize; size <= maxsize; size *= 4) {
         for (size_t offset = 1; offset < 64; offset *= 2) {
-            demorandom<false>(size, loadfactor, repeat, size, 64);
+            demorandom<false>(size, loadfactor, repeat, size, offset);
         }
     }
 }
