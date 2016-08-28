@@ -50,7 +50,7 @@ struct HashSet {
         ::std::unique_ptr<Key[]> new_slots(new Key[2 * capacity]());
         capacity *= 2;
         mask = capacity - 1;
-        for (::std::size_t i = 0; i < capacity/2; ++i) {
+        for (::std::size_t i = 0; i < capacity / 2; ++i) {
             if (0 != slots[i]) {
                 InsertNonZeroWithoutResize(hasher, capacity, mask,
                                            new_slots.get(), slots[i]);
@@ -59,7 +59,7 @@ struct HashSet {
         ::std::swap(slots, new_slots);
     }
 
-  ::std::pair<bool, ::std::size_t> Find(const Key k) const {
+    ::std::pair<bool, ::std::size_t> Find(const Key k) const {
         if (0 == k) {
             return ::std::make_pair(has_zero, 1);
         }
@@ -70,5 +70,18 @@ struct HashSet {
             if (0 == slots[s]) return ::std::make_pair(false, 1 + i);
         }
         return ::std::make_pair(false, capacity);
+    }
+
+    ::std::size_t FindPresentWithOffset(const Key k,
+                                        const size_t offset) const {
+        if (0 == k) {
+            return 1;
+        }
+        const size_t h = hasher(k) - offset;
+        for (size_t i = 0; i < capacity; ++i) {
+            const size_t s = (h + i) & mask;
+            if (k == slots[s]) return 1 + i;
+        }
+        return capacity;
     }
 };

@@ -32,18 +32,18 @@ template <typename ht>
 size_t query(ht &h, vector<uint64_t> &keys, size_t howmany, size_t offset) {
     size_t sum = 0;
     for (size_t i = 0; i < howmany; ++i) {
-        sum += h.Find(keys[i]).first;
+      sum += h.FindPresentWithOffset(keys[i], offset);
     }
     return sum;
 }
 
 template <typename ht>
-void query_avg_probed_keys(ht &h, vector<uint64_t> &keys, double *average,
-                           double *stderrprob) {
+void query_avg_probed_keys(ht &h, vector<uint64_t> &keys, const size_t offset,
+                           double *average, double *stderrprob) {
     double sum = 0;
     double sumsquare = 0;
     for (size_t i = 0; i < keys.size(); ++i) {
-        double probed = h.Find(keys[i]).second;
+        double probed = h.FindPresentWithOffset(keys[i], offset);
         sum += probed;
         sumsquare += probed * probed;
     }
@@ -52,10 +52,11 @@ void query_avg_probed_keys(ht &h, vector<uint64_t> &keys, double *average,
 }
 
 template <typename ht>
-size_t query_max_probed_keys(ht &h, vector<uint64_t> &keys) {
+size_t query_max_probed_keys(ht &h, vector<uint64_t> &keys,
+                             const size_t offset) {
     size_t mp = 0;
     for (size_t i = 0; i < keys.size(); ++i) {
-        size_t tp = h.Find(keys[i]).second;
+        size_t tp = h.FindPresentWithOffset(keys[i], offset);
         if (tp > mp) mp = tp;
     }
     return mp;
@@ -92,9 +93,9 @@ struct BasicWorker {
             cycles_end = RDTSC_FINAL();
             querycycles += (cycles_end - cycles_start) * 1.0 / howmanyqueries;
             double pk, pkerr;
-            query_avg_probed_keys(hm, keys[r], &pk, &pkerr);
+            query_avg_probed_keys(hm, keys[r], offset, &pk, &pkerr);
             max_avg_probes = std::max<double>(pk, max_avg_probes);
-            double mk = query_max_probed_keys(hm, keys[r]);
+            double mk = query_max_probed_keys(hm, keys[r], offset);
             probesperquery += pk;
             probesperquerystderr += pkerr;
             maxprobesperquery += mk;
@@ -158,6 +159,9 @@ int main() {
     const int minsize = 1024;
     const int maxsize = 64 * 1024 * 1024;
 
-    for (int size = minsize; size <= maxsize; size *= 4)
-        demorandom<false>(size, loadfactor, repeat, size, 0);
+    for (int size = minsize; size <= maxsize; size *= 4) {
+        for (size_t offset = 1; offset < 64; offset *= 2) {
+            demorandom<false>(size, loadfactor, repeat, size, 64);
+        }
+    }
 }
