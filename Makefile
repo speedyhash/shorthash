@@ -30,6 +30,9 @@ benchmark.exe: ./benchmarks/benchmark.cpp $(HEADERS)
 htbenchmark.exe: ./benchmarks/htbenchmark.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -o $@ $< -Iinclude
 
+lptimed.exe: ./benchmarks/lptimed.cpp $(HEADERS)
+	$(CXX) $(CXXFLAGS) -o $@ $< -Iinclude
+
 bucketbenchmark.exe: ./benchmarks/bucketbenchmark.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -o $@ $< -Iinclude
 
