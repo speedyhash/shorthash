@@ -22,7 +22,7 @@ all: benchmark.exe htbenchmark.exe bucketbenchmark.exe \
 HEADERS = include/clhash.h include/tabulated.h include/util.h \
     include/multiply-shift.h include/cw-trick.h benchmarks/hashpack.h \
     benchmarks/hashmap.h benchmarks/timers.hpp benchmarks/buckets.hpp \
-    include/linear.h include/identity.h
+    include/linear.h include/identity.h benchmarks/simple-hashmap.h
 
 benchmark.exe: ./benchmarks/benchmark.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -o $@ $< -Iinclude
