@@ -1,4 +1,5 @@
 ﻿---
+BasedOnStyle: 'Google'
 AlignOperands: 'true'
 AlwaysBreakTemplateDeclarations: 'true'
 ColumnLimit: '80'
