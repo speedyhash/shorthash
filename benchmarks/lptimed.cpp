@@ -117,9 +117,9 @@ struct BasicWorker {
 };
 
 #define MYHASHER                                                            \
-    MultiplyShift64Pack, ClLinear64Pack, Toeplitz64Pack, ClQuadratic64Pack, \
+    Murmur64Pack, Koloboke64Pack, MultiplyShift64Pack, ClLinear64Pack, Toeplitz64Pack, ClQuadratic64Pack, \
         ClFastQuadratic64Pack, ThorupZhangCWQuadratic64Pack, ClCubic64Pack, \
-        ThorupZhangCWCubic64Pack, ClQuartic64Pack, Zobrist64Pack
+        ThorupZhangCWCubic64Pack, ClQuartic64Pack, Zobrist64Pack, ThorupZhang64Pack
 
 template <bool robinhood = true>
 void demorandom(const uint64_t howmany, const float loadfactor,
