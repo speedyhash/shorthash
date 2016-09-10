@@ -48,5 +48,8 @@ collision-test.exe: ./test/collision-test.cpp $(HEADERS)
 worst.exe: ./benchmarks/worst.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -o $@ $< -Iinclude
 
+short-width.exe: ./test/short-width.cc
+	$(CXX) $(CXXFLAGS) -o $@ $<
+
 clean:
 	rm -f *.o *.exe
