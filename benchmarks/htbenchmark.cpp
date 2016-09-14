@@ -86,6 +86,7 @@ struct BasicWorker {
             cycles_start = RDTSC_START();
             populate(hm, keys[r]);
             cycles_end = RDTSC_FINAL();
+            assert(hm.sanity_check());
             collection.push_back(hm);
             assert( hm.size() == howmany);
         }

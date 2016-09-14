@@ -1,3 +1,4 @@
+#include <cassert>
 #include <memory>
 #include <utility>
 
@@ -29,7 +30,8 @@ struct HashSet {
                 return true;
             }
         }
-        return false;
+        throw std::runtime_error("could not insert key"); // should we ever make it here, then there was no room
+        // return false;
     }
 
     bool Insert(const Key k) {

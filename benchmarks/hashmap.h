@@ -17,6 +17,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
+/*
+Heavily modified by D. Lemire
+*/
 
 
 #pragma once
@@ -166,23 +169,73 @@ public:
         size_t keyhash;
         for (size_t idx = ideal;; idx = probe_next(idx)) {
             if (buckets_[idx].first == empty_key_) {
+
                 buckets_[idx].second = value;
                 buckets_[idx].first = key;
                 size_++;
                 return {iterator(this, idx), true};
             } else if (buckets_[idx].first == key) {
                 return {iterator(this, idx), false};
-            } else if (robinhood_ && (diff(keyhash = key_to_idx(buckets_[idx].first),idx) < diff(idx,ideal))) {// Robin-Hood
-                ideal = keyhash;
-                std::swap(buckets_[idx].first, key);
-                MT tmpv = buckets_[idx].second;
-                buckets_[idx].second = value;
-                value = tmpv;
+            }
+            if(robinhood_) {
+              keyhash = key_to_idx(buckets_[idx].first);
+              if  (diff(idx,keyhash) < diff(idx,ideal)) {// Robin-Hood
+                  ideal = keyhash;
+                  key_type tmpk = buckets_[idx].first;
+                  buckets_[idx].first = key;
+                  key = tmpk;
+                  MT tmpv = std::move(buckets_[idx].second);
+                  buckets_[idx].second = std::move(value);
+                  value = std::move(tmpv);
+              }
             }
         }
     };
 
+    // check that this key is properly set (DEBUG function)
+    bool sanity_check_key(key_type key) {
+        if(key == empty_key_) throw std::runtime_error("can't check the empty key.");
+        size_t ideal = key_to_idx(key);
+        size_t expected_probes = probed_keys(key);
+        size_t counted_probes = 0;
+
+        for (size_t idx = ideal;; idx = probe_next(idx)) {
+            counted_probes++;
+            if(counted_probes != diff(idx,ideal) + 1) {
+              printf("ideal = %zu counted_probes = %zu current index = %zu capacity = %zu diff(idx,ideal) = %zu ", ideal, counted_probes, idx, buckets_.size(), diff(idx,ideal));
+            }
+            assert(counted_probes == diff(idx,ideal) + 1);
+            if (buckets_[idx].first == key) {
+                assert(counted_probes == expected_probes);
+                return true;
+            }
+            if (buckets_[idx].first == empty_key_) {
+                fprintf(stderr, "An error occured, I should not have encountered an empty key.\n");
+                return false;
+            }
+            if (robinhood_ && (diff(idx,key_to_idx(buckets_[idx].first)) < diff(idx,ideal))) {// Robin-Hood
+                fprintf(stderr, "An error occured, Robin-Hood order is broken. Was checking key %zu with an ideal of %zu. Made it index %zu found value with an ideal of %zu .\n", (size_t)key, (size_t)ideal,(size_t)idx, (size_t)key_to_idx(buckets_[idx].first));
+                return false;
+            }
+        }
+    }
+
+
+    // this checks the status of the hash table (DEBUG function)
+    bool sanity_check() {
+        for (size_t idx = 0; idx < buckets_.size(); idx += 1) {
+            if (buckets_[idx].first == empty_key_) {
+              continue;
+            }
+            if(!sanity_check_key(buckets_[idx].first)) {
+              return false;
+            }
+        }
+        return true; // we are good.
+    }
+
     void erase(iterator it) {
+        assert(! robinhood_); // todo: add robin-hood hashing
         size_t bucket = it.idx_;
         for (size_t idx = probe_next(bucket);; idx = probe_next(idx)) {
             if (buckets_[idx].first == empty_key_) {
@@ -200,6 +253,7 @@ public:
     }
 
     size_type erase(const key_type key) {
+        assert(! robinhood_); // todo: add robin-hood hashing
         auto it = find(key);
         if (it != end()) {
             erase(it);
@@ -226,10 +280,10 @@ public:
     const mapped_type &at(key_type key) const {
         return at(key);
     }
-
+/*
     mapped_type &operator[](key_type key) {
         return emplace(key).first->second;
-    }
+    }*/
 
     size_type count(key_type key) const {
         return find(key) == end() ? 0 : 1;
@@ -246,10 +300,12 @@ public:
             }
             // todo : could optimize for robin-hood hashing if unsuccessful searches are expected
         }
+
     }
 
-
+    // return how many keys are probed
     int probed_keys(key_type key) {
+
         int counter = 0;
         for (size_t idx = key_to_idx(key);; idx = probe_next(idx)) {
             counter ++;
@@ -260,6 +316,7 @@ public:
                 return counter;
             }
         }
+
     }
 
     const_iterator find(key_type key) const {
@@ -273,6 +330,7 @@ public:
 
     // Hash policy
     void rehash(size_type count_var) {
+        assert(count_var > size());
         count_var = std::max(count_var, size());
         HashMap other(*this, count_var);
         swap(other);
@@ -312,9 +370,9 @@ private:
     }
 
     key_type empty_key_;
-    float loadFactor_;
+    const float loadFactor_;
     buckets buckets_;
     size_t size_ = 0;
-    hasher  hasher_;
+    const hasher  hasher_;
 };
 }

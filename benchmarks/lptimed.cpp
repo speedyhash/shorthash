@@ -66,8 +66,7 @@ const uint64_t EMPTY = 0xFFFFFFFFFFFFFFFF;
 template <bool robinhood>
 struct BasicWorker {
     template <typename Pack>
-    static inline void Go(std::vector<std::vector<uint64_t> > &keys,
-                          const float loadfactor, const int repeat,
+    static inline void Go(std::vector<std::vector<uint64_t> > &keys, const int repeat,
                           size_t howmanyqueries, size_t offset) {
         double querycycles = 0;
         double probesperquery = 0;
@@ -122,7 +121,7 @@ struct BasicWorker {
         ThorupZhangCWCubic64Pack, ClQuartic64Pack, Zobrist64Pack, ThorupZhang64Pack
 
 template <bool robinhood = true>
-void demorandom(const uint64_t howmany, const float loadfactor,
+void demorandom(const uint64_t howmany,
                 const float repeat, const size_t howmanyqueries,
                 const size_t offset) {
     srand(0);
@@ -140,7 +139,6 @@ void demorandom(const uint64_t howmany, const float loadfactor,
 
     std::cout << "populating a hash table with " << howmany
               << " random 64-bit keys and then retrieving them. " << std::endl;
-    std::cout << "load factor = " << loadfactor << std::endl;
     std::cout << "number of consecutive queries on same hash table = "
               << howmanyqueries << std::endl;
 
@@ -149,19 +147,18 @@ void demorandom(const uint64_t howmany, const float loadfactor,
               << std::endl;
 
     ForEachT<MYHASHER>::template Go<BasicWorker<robinhood> >(
-        allkeys, loadfactor, repeat, howmanyqueries, offset);
+        allkeys, repeat, howmanyqueries, offset);
     std::cout << std::endl;
 }
 
 int main() {
-    const float loadfactor = 0.5;
     const float repeat = 1;
     const int minsize = 1024;
     const int maxsize = 64 * 1024 * 1024;
 
     for (int size = minsize; size <= maxsize; size *= 4) {
         for (size_t offset = 1; offset < 64; offset *= 2) {
-            demorandom<false>(size, loadfactor, repeat, size, offset);
+            demorandom<false>(size, repeat, size, offset);
         }
     }
 }
