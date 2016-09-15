@@ -200,7 +200,6 @@ public:
         size_t counted_probes = 0;
 
         for (size_t idx = ideal;; idx = probe_next(idx)) {
-            counted_probes++;
             if(counted_probes != diff(idx,ideal) + 1) {
               printf("ideal = %zu counted_probes = %zu current index = %zu capacity = %zu diff(idx,ideal) = %zu ", ideal, counted_probes, idx, buckets_.size(), diff(idx,ideal));
             }
@@ -217,6 +216,7 @@ public:
                 fprintf(stderr, "An error occured, Robin-Hood order is broken. Was checking key %zu with an ideal of %zu. Made it index %zu found value with an ideal of %zu .\n", (size_t)key, (size_t)ideal,(size_t)idx, (size_t)key_to_idx(buckets_[idx].first));
                 return false;
             }
+            counted_probes++;
         }
     }
 
@@ -303,18 +303,18 @@ public:
 
     }
 
-    // return how many keys are probed
+    // return probing distance (min = 0)
     int probed_keys(key_type key) {
 
         int counter = 0;
         for (size_t idx = key_to_idx(key);; idx = probe_next(idx)) {
-            counter ++;
             if (buckets_[idx].first == key) {
                 return counter;
             }
             if (buckets_[idx].first == empty_key_) {
                 return counter;
             }
+            counter ++;
         }
 
     }
