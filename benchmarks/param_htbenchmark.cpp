@@ -183,10 +183,10 @@ int main(int argc, char **argv) {
     size_t howmany = size;
 
     if(model == FROMTOP) {
+        uint64_t init = get64rand();
         for(uint64_t i = 0; i < howmany; ++i) {
-            keys.push_back(reversebits(i));
+            keys.push_back(reversebits(i + init));
         }
-
     } else if (model == GEOMETRIC) {
         uint64_t init = get64rand();
         for(uint64_t i = 0; i < howmany; ++i) {
