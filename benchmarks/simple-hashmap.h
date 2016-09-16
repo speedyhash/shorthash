@@ -9,39 +9,39 @@ struct HashSet {
     ::std::unique_ptr<Key[]> slots;
     bool has_zero;
 
-    HashSet()
+    HashSet(::std::size_t log_capacity = 3)
         : hasher(),
           size(0),
-          capacity(8),
+          capacity(1ull << log_capacity),
           mask(capacity - 1),
           slots(new Key[capacity]()),
           has_zero(false) {}
 
-    static bool InsertNonZeroWithoutResize(const HashFamily &hasher,
-                                           const ::std::size_t capacity,
-                                           const ::std::size_t mask,
-                                           Key slots[], const Key k) {
+    static ::std::pair<bool, ::std::size_t> InsertNonZeroWithoutResize(
+        const HashFamily &hasher, const ::std::size_t capacity,
+        const ::std::size_t mask, Key slots[], const Key k) {
         const size_t h = hasher(k);
         for (size_t i = 0; i < capacity; ++i) {
             const size_t s = (h + i) & mask;
-            if (k == slots[s]) return false;
+            if (k == slots[s]) return ::std::make_pair(false, i);
             if (0 == slots[s]) {
                 slots[s] = k;
-                return true;
+                return ::std::make_pair(true, i);
             }
         }
-        throw std::runtime_error("could not insert key"); // should we ever make it here, then there was no room
-        // return false;
+        throw std::runtime_error("could not insert key");  // should we ever
+                                                           // make it here, then
+                                                           // there was no room
     }
 
-    bool Insert(const Key k) {
+    ::std::pair<bool, ::std::size_t> Insert(const Key k) {
         if (0 == k) {
             has_zero = true;
-            return true;
+            return ::std::make_pair(true, 0);
         }
-        const bool result =
+        const auto result =
             InsertNonZeroWithoutResize(hasher, capacity, mask, slots.get(), k);
-        if (result) {
+        if (result.first) {
             ++size;
             if (size > capacity / 2) Upsize();
         }

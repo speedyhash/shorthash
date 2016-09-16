@@ -1,7 +1,7 @@
 #ifndef IDENTITY_H
 #define IDENTITY_H
 
-typedef struct {
+typedef struct { char cpp_compatibility;
 } identity_t;
 
 void identity_init(identity_t *key) {
