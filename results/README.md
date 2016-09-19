@@ -56,7 +56,7 @@ but it also fares very poorly some of the time as indicated by the maximum count
 
 Out of the other hash functions, kolokobe stands out as being particularly robust. It has fewer "long probes".
 
-Zobrist, murmur and CW cubic are difficult to distinguish.
+Zobrist, murmur and CL cubic, CW cubic are difficult to distinguish.
 
 ### Sept. 16th 2016
 
@@ -87,4 +87,4 @@ You can compare with the median counts:
 Results:
 
 
-Zobrist, murmur and CW cubic are difficult to distinguish.
+Zobrist, murmur, CL cubic and CW cubic are difficult to distinguish.
