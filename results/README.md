@@ -55,3 +55,36 @@ Multiply-shift is interesting. It will provide a much smaller median probing dis
 but it also fares very poorly some of the time as indicated by the maximum counts.
 
 Out of the other hash functions, kolokobe stands out as being particularly robust. It has fewer "long probes".
+
+Zobrist, murmur and CW cubic are difficult to distinguish.
+
+### Sept. 16th 2016
+
+
+We repeat the same analysis but this time, the bits of the keys are reversed. So
+we start from the same keys [x,1000000+x) but then we "reverse the bits" (transforming
+  sum a_i 2^i into sum a_i 2^(w-i) ) of each key.
+
+We can then plot these results:
+
+- [sept16_2016_geometric_firstquartilecount.pdf](sept16_2016_geometric_firstquartilecount.pdf)
+- [sept16_2016_geometric_maximalcount.pdf](sept16_2016_geometric_firstquartilecount.pdf)
+- [sept16_2016_geometric_mediancount.pdf](sept16_2016_geometric_mediancount.pdf)
+- [sept16_2016_geometric_minimalcount.pdf](sept16_2016_geometric_minimalcount.pdf)
+- [sept16_2016_geometric_thirdquartilecount.pdf](sept16_2016_geometric_thirdquartilecount.pdf)
+
+So looking at  [sept16_2016_geometric_maximalcount.pdf](sept16_2016_geometric_firstquartilecount.pdf) is a good
+way to see which hash functions are "robust".
+
+
+![sept16_2016_geometric_maximalcount.png](sept16_2016_geometric_maximalcount.png)
+
+You can compare with the median counts:
+
+![sept16_2016_geometric_mediancount.png](sept16_2016_geometric_mediancount.png)
+
+
+Results:
+
+
+Zobrist, murmur and CW cubic are difficult to distinguish.
