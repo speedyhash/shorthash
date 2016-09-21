@@ -23,8 +23,10 @@ import os
 # hashfamily 10 is cwcubic
 # hashfamily 11 is multiplyshift
 # hashfamily 12 is cyclic
+# hashfamily 13 is fnv
+# hashfamily 14 is identity
 allmodels = ["geometric", "fromtop", "random", "graycode"]
-allfamilies = ["murmur", "koloboke", "zobrist", "wide-zobrist", "tztabulated", "cllinear", "clquadratic", "clcubic", "cwlinear",  "cwquadratic", "cwcubic", "multiplyshift", "cyclic" ]
+allfamilies = ["murmur", "koloboke", "zobrist", "wide-zobrist", "tztabulated", "cllinear", "clquadratic", "clcubic", "cwlinear",  "cwquadratic", "cwcubic", "multiplyshift", "cyclic" , "fnv", "identity"]
 scriptlocation = os.path.dirname(os.path.abspath(__file__))
 
 #Usage: ./param_htbenchmark.exe -l [maxloadfactor:0-1] -s [size:>0] -m [model:0-3] -H [hashfamily:0-11]
@@ -55,7 +57,7 @@ print("#repeat=",str(repeat))
 effectiveload = 0
 
 for family in range(len(allfamilies)):
-    allhistos = []
+    maxageprobe = 0
     print("# family",allfamilies[family])
     if(allfamilies[family] == "tztabulated"):
         print("#skipping")
@@ -65,7 +67,9 @@ for family in range(len(allfamilies)):
     for test in range(repeat):
         effectiveload, avgprobe = getavgprobe(size,model,family)
         print(avgprobe, flush=True)
+        if (avgprobe > maxageprobe) :
+          maxageprobe = avgprobe
     print("# effectiveload=", effectiveload)
-    print("# this was the end of ", allfamilies[family])
+    print("# this was the end of ", allfamilies[family], " max avg probe ", maxageprobe)
     print()
     print()
