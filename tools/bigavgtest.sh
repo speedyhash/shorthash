@@ -8,10 +8,10 @@ do
       SIZE=$((2**i))
       for MODEL in $(seq 0 2)
       do
-            outputfile=bigmax_"$DATE"_"$MODEL"_"$SIZE"_"$REPEAT".txt
+            outputfile=bigavg_"$DATE"_"$MODEL"_"$SIZE"_"$REPEAT".txt
             echo "Producing $outputfile ..."
             set -x #echo on
-            $DIR/maxprobedistribution.py "$MODEL" "$SIZE" "$REPEAT" > $outputfile
+            $DIR/avgprobedistribution.py "$MODEL" "$SIZE" "$REPEAT" > $outputfile
             set +x #echo off
             sleep 1
             echo "Done"

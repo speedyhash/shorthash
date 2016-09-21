@@ -114,7 +114,7 @@ enum {GEOMETRIC=0, FROMTOP=1, RANDOM=2, GRAYCODE = 3};
 const char*models[] = {"geometric","fromtop","random", "graycode"};
 
 
-const char* hashfamilies[] = {"murmur","koloboke","zobrist", "wide-zobrist", "tztabulated", "cllinear", "clquadratic", "clcubic", "cwlinear", "cwquadratic", "cwcubic","multiplyshift"};
+const char* hashfamilies[] = {"murmur","koloboke","zobrist", "wide-zobrist", "tztabulated", "cllinear", "clquadratic", "clcubic", "cwlinear", "cwquadratic", "cwcubic","multiplyshift", "cyclic"};
 
 void printusage(const char * name) {
     printf("Usage: %s -l [maxloadfactor:0-1] -s [size:>0] -m [model:0-%d] -H [hashfamily:0-%d]\n",name,(int)(sizeof(models)/sizeof(models[0]))-1,(int)(sizeof(hashfamilies)/sizeof(hashfamilies[0]))-1);
@@ -245,6 +245,8 @@ int main(int argc, char **argv) {
     case 11:
         BasicWorker<robinhood>::Go<MultiplyShift64Pack>(keys,loadfactor);
         break;
+    case 12:
+        BasicWorker<robinhood>::Go<Cyclic64Pack>(keys,loadfactor);
     default:
         printf("unrecognized hasher index %d \n", hasher);
         printusage(argv[0]);

@@ -22,19 +22,20 @@ import os
 # hashfamily 9 is cwquadratic
 # hashfamily 10 is cwcubic
 # hashfamily 11 is multiplyshift
+# hashfamily 12 is cyclic
 allmodels = ["geometric", "fromtop", "random", "graycode"]
-allfamilies = ["murmur", "koloboke", "zobrist", "wide-zobrist", "tztabulated", "cllinear", "clquadratic", "clcubic", "cwlinear",  "cwquadratic", "cwcubic", "multiplyshift" ]
+allfamilies = ["murmur", "koloboke", "zobrist", "wide-zobrist", "tztabulated", "cllinear", "clquadratic", "clcubic", "cwlinear",  "cwquadratic", "cwcubic", "multiplyshift", "cyclic" ]
 scriptlocation = os.path.dirname(os.path.abspath(__file__))
 
 #Usage: ./param_htbenchmark.exe -l [maxloadfactor:0-1] -s [size:>0] -m [model:0-3] -H [hashfamily:0-11]
-def gethisto(size, model, family):
+def getavgprobe(size, model, family):
   pipe = subprocess.Popen([scriptlocation+"/../"+"param_htbenchmark.exe", "-l", "1", "-s" , str(size),  "-m", str(model), "-H", str(family)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
   res = pipe.communicate()[0].decode().split("\n")
   res = tuple(filter(lambda x: len(x)>0,res))
   res = tuple(filter(lambda x: not(x.startswith("#")),res))
   effectiveload = float(res[0].split()[0])
-  histo = tuple(map(int,res[1].split()))
-  return (effectiveload, histo)
+  avgprobe = float(res[0].split()[1])
+  return (effectiveload, avgprobe)
 
 
 
@@ -47,22 +48,6 @@ args = parser.parse_args()
 size = args.size
 model = args.model
 repeat = args.repeat
-
-def maxhistosize(allhistos):
-    return max(len(h) for h in allhistos)
-
-def valorzero(histo,i):
-    if(i < len(histo)): return histo[i]
-    return 0
-
-
-def statsfromhistos(allhistos) :
-    ms = maxhistosize(allhistos)
-    maxhisto = [0 for i in range(ms)]
-    for histo in allhistos:
-        maxhisto[len(histo)-1] += 1
-    for i in range(ms):
-        print(i,maxhisto[i])
 
 print("#model=",allmodels[model])
 print("#size=",str(size))
@@ -78,9 +63,9 @@ for family in range(len(allfamilies)):
         print()
         continue
     for test in range(repeat):
-        effectiveload, histo = gethisto(size,model,family)
-        allhistos.append(histo)
+        effectiveload, avgprobe = getavgprobe(size,model,family)
+        print(avgprobe, flush=True)
     print("# effectiveload=", effectiveload)
-    statsfromhistos(allhistos)
+    print("# this was the end of ", allfamilies[family])
     print()
     print()
