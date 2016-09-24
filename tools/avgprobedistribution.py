@@ -25,8 +25,11 @@ import os
 # hashfamily 12 is cyclic
 # hashfamily 13 is fnv
 # hashfamily 14 is identity
+# hashfamily 15 is oddmultiply
+# hashfamily 16 is randkolokobe
+
 allmodels = ["geometric", "fromtop", "random", "graycode"]
-allfamilies = ["murmur", "koloboke", "zobrist", "wide-zobrist", "tztabulated", "cllinear", "clquadratic", "clcubic", "cwlinear",  "cwquadratic", "cwcubic", "multiplyshift", "cyclic" , "fnv", "identity"]
+allfamilies = ["murmur", "koloboke", "zobrist", "wide-zobrist", "tztabulated", "cllinear", "clquadratic", "clcubic", "cwlinear",  "cwquadratic", "cwcubic", "multiplyshift", "cyclic" , "fnv", "identity", "oddmultiply", "randkolokobe"]
 scriptlocation = os.path.dirname(os.path.abspath(__file__))
 
 #Usage: ./param_htbenchmark.exe -l [maxloadfactor:0-1] -s [size:>0] -m [model:0-3] -H [hashfamily:0-11]

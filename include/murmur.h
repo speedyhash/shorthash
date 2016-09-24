@@ -89,6 +89,14 @@ void koloboke_init(koloboke_t *key) {
   key->shift2 = 16;
   key->multiplier = UINT64_C(0x9E3779B97F4A7C15);
 }
+
+
+void randomized_koloboke_init(koloboke_t *key) {
+  key->shift1 = 32;
+  key->shift2 = 16;
+  key->multiplier = get64rand() | 1; // random odd numbers
+}
+
 __attribute__((always_inline))
 inline uint64_t koloboke64(uint64_t h, const koloboke_t * key) {
   h *= key->multiplier;

@@ -10,6 +10,7 @@ extern "C" {
 #include "fnv.h"
 #include "linear.h"
 #include "identity.h"
+#include "oddmultiply.h"
 }
 
 template <typename WordP, typename RandomnessP,
@@ -108,11 +109,21 @@ struct xxHash64Pack
 };
 
 
+struct ReversedOddMultiply64Pack
+        : public GenericPack<uint64_t, oddmultiply64_t, oddmultiply64_init, reversed_oddmultiply64> {
+    static constexpr auto NAME = "ReversedOddMultiply64";
+};
+
 struct Koloboke64Pack
         : public GenericPack<uint64_t, koloboke_t, koloboke_init, koloboke64> {
     static constexpr auto NAME = "Koloboke64";
 };
 
+
+struct RandomKoloboke64Pack
+        : public GenericPack<uint64_t, koloboke_t, randomized_koloboke_init, koloboke64> {
+    static constexpr auto NAME = "Koloboke64";
+};
 
 struct Zobrist64Pack
         : public GenericPack<uint64_t, zobrist_t, zobrist_init, zobrist> {

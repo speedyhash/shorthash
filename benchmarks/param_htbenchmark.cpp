@@ -262,6 +262,13 @@ int main(int argc, char **argv) {
     case 14:
         BasicWorker<robinhood>::Go<Identity64Pack>(keys,loadfactor);
         break;
+    case 15:
+        BasicWorker<robinhood>::Go<ReversedOddMultiply64Pack>(keys,loadfactor);
+        break;
+    case 16:
+        BasicWorker<robinhood>::Go<RandomKoloboke64Pack>(keys,loadfactor);
+        break;
+
     default:
         printf("unrecognized hasher index %d \n", hasher);
         printusage(argv[0]);
