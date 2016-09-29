@@ -3,6 +3,9 @@
 #include <algorithm>
 #include <numeric>
 #include <functional>
+#include <bitset>
+#include <climits>
+#include <utility>
 
 #include "hashpack.h"
 #include "simple-hashmap.h"
@@ -10,12 +13,24 @@
 
 using namespace std;
 
-template <typename HashFamily, typename Key>
-size_t probe_length(size_t log_num_keys, const vector<Key>& to_insert) {
-    HashSet<Key, HashFamily> ht(1 + log_num_keys);
+template <typename Key>
+Key flip_bits(const Key k) {
+    bitset<numeric_limits<Key>::digits> result(k);
+    for (size_t i = 0; i < result.size()/2; ++i) {
+        const bool temp = result[i];
+        result[i] = result[result.size() - i];
+        result[result.size() - i] = temp;
+    }
+    return result.to_ullong();
+}
+
+template <typename HashFamily, bool FlipBits = false, bool FullTable = false>
+size_t probe_length(size_t log_num_keys,
+                    const vector<typename HashFamily::Word>& to_insert) {
+    HashSet<typename HashFamily::Word, HashFamily, FullTable> ht(log_num_keys);
     size_t result = 0;
     for (const auto k : to_insert) {
-        result += ht.Insert(k).second;
+        result += ht.Insert(FlipBits ? flip_bits(k) : k).second;
     }
     return result;
 }
@@ -32,7 +47,8 @@ int main() {
   }
   for (int i = 0; i < 100; ++i) {
       results.push_back(
-          probe_length<MultiplyShift64Pack>(LOG_NUM_KEYS, to_insert));
+          probe_length<RandomWeakKoloboke64Pack, /* FlipBits */ true,
+                       /* FullTable */ true>(LOG_NUM_KEYS, to_insert));
   }
   cout << "done" << endl;
   sort(results.begin(), results.end(), greater<uint64_t>());

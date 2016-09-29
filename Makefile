@@ -17,7 +17,7 @@ CXXFLAGS =  $(FLAGS) -std=c++11
 
 all: benchmark.exe param_htbenchmark.exe htbenchmark.exe lptimed.exe bucketbenchmark.exe \
     linearprobebenchmark.exe cw-trick-test.exe collision-test.exe worst.exe \
-    $(OBJECTS)
+    fig2a.exe $(OBJECTS)
 
 HEADERS = include/clhash.h include/tabulated.h include/util.h \
     include/multiply-shift.h include/cw-trick.h benchmarks/hashpack.h \

@@ -97,7 +97,35 @@ inline uint64_t koloboke64(uint64_t h, const koloboke_t * key) {
   return h;
 }
 
+typedef struct {
+    // Random multiplier
+    uint64_t multiplier;
+} random_koloboke_t;
 
+void random_koloboke_init(random_koloboke_t *key) {
+    key->multiplier = 1 | get64rand();
+}
+__attribute__((always_inline)) inline uint64_t
+    random_koloboke64(uint64_t h, const random_koloboke_t *key) {
+    h *= key->multiplier;
+    h ^= h >> 32;
+    h ^= h >> 16;
+    return h;
+}
 
+typedef struct {
+    // Random multiplier, only one shift
+    uint64_t multiplier;
+} random_weak_koloboke_t;
+
+void random_weak_koloboke_init(random_weak_koloboke_t *key) {
+    key->multiplier = 1 | get64rand();
+}
+__attribute__((always_inline)) inline uint64_t
+    random_weak_koloboke64(uint64_t h, const random_weak_koloboke_t *key) {
+    h *= key->multiplier;
+    h ^= h >> 32;
+    return h;
+}
 
 #endif

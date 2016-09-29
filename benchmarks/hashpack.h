@@ -107,6 +107,18 @@ struct Koloboke64Pack
     static constexpr auto NAME = "Koloboke64";
 };
 
+struct RandomKoloboke64Pack
+    : public GenericPack<uint64_t, random_koloboke_t, random_koloboke_init,
+                         random_koloboke64> {
+    static constexpr auto NAME = "RandKolo64";
+};
+
+struct RandomWeakKoloboke64Pack
+    : public GenericPack<uint64_t, random_weak_koloboke_t,
+                         random_weak_koloboke_init, random_weak_koloboke64> {
+    static constexpr auto NAME = "RWKolo64";
+};
+
 
 struct Zobrist64Pack
         : public GenericPack<uint64_t, zobrist_t, zobrist_init, zobrist> {
