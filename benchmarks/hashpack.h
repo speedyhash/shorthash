@@ -7,8 +7,10 @@ extern "C" {
 #include "tabulated.h"
 #include "crc.h"
 #include "murmur.h"
+#include "fnv.h"
 #include "linear.h"
 #include "identity.h"
+#include "oddmultiply.h"
 }
 
 template <typename WordP, typename RandomnessP,
@@ -89,6 +91,11 @@ struct Murmur64Pack
     static constexpr auto NAME = "Murmur64";
 };
 
+struct FNV64Pack
+        : public GenericPack<uint64_t, fnv64_t, fnv64_init, fnv64> {
+    static constexpr auto NAME = "FNV64";
+};
+
 
 struct Stafford64Pack
         : public GenericPack<uint64_t, murmur64_t, staffordmix01_init, murmur64> {
@@ -101,6 +108,11 @@ struct xxHash64Pack
     static constexpr auto NAME = "xxHash64";
 };
 
+
+struct ReversedOddMultiply64Pack
+        : public GenericPack<uint64_t, oddmultiply64_t, oddmultiply64_init, reversed_oddmultiply64> {
+    static constexpr auto NAME = "ReversedOddMultiply64";
+};
 
 struct Koloboke64Pack
         : public GenericPack<uint64_t, koloboke_t, koloboke_init, koloboke64> {
@@ -119,6 +131,11 @@ struct RandomWeakKoloboke64Pack
     static constexpr auto NAME = "RWKolo64";
 };
 
+
+struct RandomKoloboke64Pack
+        : public GenericPack<uint64_t, koloboke_t, randomized_koloboke_init, koloboke64> {
+    static constexpr auto NAME = "Koloboke64";
+};
 
 struct Zobrist64Pack
         : public GenericPack<uint64_t, zobrist_t, zobrist_init, zobrist> {

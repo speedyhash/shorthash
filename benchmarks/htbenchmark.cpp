@@ -199,8 +199,9 @@ void demofillfromtop(const uint64_t howmany, const float loadfactor,  uint32_t r
     std::vector<std::vector<uint64_t> > allkeys;
     for(size_t r = 0; r < repeat; ++r)  {
       std::vector<uint64_t>  keys;
+      uint64_t init = get64rand();
       for(uint64_t i = 0; i <= howmany; ++i) {
-        keys.push_back(reversebits(i));
+        keys.push_back(reversebits(i + init));
       }
       std::shuffle(keys.begin(), keys.end(),g);
       allkeys.push_back(keys);

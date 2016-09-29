@@ -114,7 +114,7 @@ enum {GEOMETRIC=0, FROMTOP=1, RANDOM=2, GRAYCODE = 3};
 const char*models[] = {"geometric","fromtop","random", "graycode"};
 
 
-const char* hashfamilies[] = {"murmur","koloboke","zobrist", "wide-zobrist", "tztabulated", "cllinear", "clquadratic", "clcubic", "cwlinear", "cwquadratic", "cwcubic","multiplyshift"};
+const char* hashfamilies[] = {"murmur","koloboke","zobrist", "wide-zobrist", "tztabulated", "cllinear", "clquadratic", "clcubic", "cwlinear", "cwquadratic", "cwcubic","multiplyshift", "cyclic", "fnv", "identity"};
 
 void printusage(const char * name) {
     printf("Usage: %s -l [maxloadfactor:0-1] -s [size:>0] -m [model:0-%d] -H [hashfamily:0-%d]\n",name,(int)(sizeof(models)/sizeof(models[0]))-1,(int)(sizeof(hashfamilies)/sizeof(hashfamilies[0]))-1);
@@ -134,7 +134,15 @@ int main(int argc, char **argv) {
     int size = -1;
     int model = -1;
     int hasher = -1;
-    srand (time(NULL));
+    int seed = 0;
+    struct timespec currenttime;
+    if( clock_gettime( CLOCK_REALTIME, &currenttime) == -1 ) {
+      seed = time(NULL);
+    } else {
+      seed = currenttime.tv_nsec;
+    }
+    printf("# random seed = %d \n",seed);
+    srand (seed);
     int c;
     if(argc == 1) {
         printusage(argv[0]);
@@ -183,10 +191,10 @@ int main(int argc, char **argv) {
     size_t howmany = size;
 
     if(model == FROMTOP) {
+        uint64_t init = get64rand();
         for(uint64_t i = 0; i < howmany; ++i) {
-            keys.push_back(reversebits(i));
+            keys.push_back(reversebits(i + init));
         }
-
     } else if (model == GEOMETRIC) {
         uint64_t init = get64rand();
         for(uint64_t i = 0; i < howmany; ++i) {
@@ -245,6 +253,22 @@ int main(int argc, char **argv) {
     case 11:
         BasicWorker<robinhood>::Go<MultiplyShift64Pack>(keys,loadfactor);
         break;
+    case 12:
+        BasicWorker<robinhood>::Go<Cyclic64Pack>(keys,loadfactor);
+        break;
+    case 13:
+        BasicWorker<robinhood>::Go<FNV64Pack>(keys,loadfactor);
+        break;
+    case 14:
+        BasicWorker<robinhood>::Go<Identity64Pack>(keys,loadfactor);
+        break;
+    case 15:
+        BasicWorker<robinhood>::Go<ReversedOddMultiply64Pack>(keys,loadfactor);
+        break;
+    case 16:
+        BasicWorker<robinhood>::Go<RandomKoloboke64Pack>(keys,loadfactor);
+        break;
+
     default:
         printf("unrecognized hasher index %d \n", hasher);
         printusage(argv[0]);
