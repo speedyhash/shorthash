@@ -93,7 +93,8 @@ Zobrist, murmur, CL cubic and CW cubic are difficult to distinguish.
 
 ### Sept. 21st 2016 (written up Oct. 6)
 
-I have generated 2048 hash tables filled with 524288 keys, with a 100% fill factor.
+I have generated 2048 hash tables filled with 524288 keys, with a 100% fill factor. For each hash table, I record
+the average probing distance (over all 524288 keys). Then I plot the frequency distribution. 
 
 Results with sequential keys :
 
