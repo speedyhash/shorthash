@@ -88,3 +88,23 @@ Results:
 
 
 Zobrist, murmur, CL cubic and CW cubic are difficult to distinguish.
+
+
+
+### Sept. 21st 2016 (written up Oct. 6)
+
+I have generated 2048 hash tables filled with 524288 keys, with a 100% fill factor.
+
+Results with sequential keys :
+
+![bigavg_2016-09-21_0_524288_2048.png](bigavg_2016-09-21_0_524288_2048.png)
+
+Results with bit-reversed sequential keys :
+
+![bigavg_2016-09-21_1_524288_2048.png](bigavg_2016-09-21_1_524288_2048.png)
+
+
+The results clearly indicate that koloboke can let us down.
+
+The story seems to be the same as before however, Zobrist, murmur and cubic are difficult
+to distinguish.
