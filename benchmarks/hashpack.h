@@ -67,7 +67,7 @@ struct SipPack {
     static inline Word HashFunction(Word x, const Randomness *r) {
         Word result;
         siphash(reinterpret_cast<uint8_t *>(&result),
-                reinterpret_cast<const uint8_t *>(&x), sizeof(Word),
+                reinterpret_cast<const uint8_t *>(&x),
                 reinterpret_cast<const uint8_t *>(r));
         return result;
     }
