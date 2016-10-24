@@ -12,7 +12,7 @@ else
 FLAGS = $(SHARED_FLAGS) -O3
 endif # debug
 
-#CFLAGS = $(FLAGS) -std=c99
+CFLAGS = $(FLAGS) -std=c99
 CXXFLAGS =  $(FLAGS) -std=c++11
 
 all: benchmark.exe param_htbenchmark.exe htbenchmark.exe lptimed.exe bucketbenchmark.exe \
@@ -24,8 +24,11 @@ HEADERS = include/clhash.h include/tabulated.h include/util.h \
     benchmarks/hashmap.h benchmarks/timers.hpp benchmarks/buckets.hpp \
     include/linear.h include/identity.h benchmarks/simple-hashmap.h
 
-benchmark.exe: ./benchmarks/benchmark.cpp $(HEADERS)
-	$(CXX) $(CXXFLAGS) -o $@ $< -Iinclude
+siphash24.o: ./include/siphash24.c
+	$(CC) $(CFLAGS) -o $@ $< -c
+
+benchmark.exe: ./benchmarks/benchmark.cpp siphash24.o $(HEADERS)
+	$(CXX) $(CXXFLAGS) -o $@ $< -Iinclude siphash24.o
 param_htbenchmark.exe: ./benchmarks/param_htbenchmark.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -o $@ $< -Iinclude
 

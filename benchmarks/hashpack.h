@@ -11,6 +11,7 @@ extern "C" {
 #include "linear.h"
 #include "identity.h"
 #include "oddmultiply.h"
+#include "siphash24.h"
 }
 
 template <typename WordP, typename RandomnessP,
@@ -49,6 +50,45 @@ public:
     }
 
   protected:
+    std::shared_ptr<Randomness> myr;
+};
+
+struct SipPack {
+    static constexpr auto NAME = "SipHash";
+    typedef uint64_t Word;
+    typedef unsigned __int128 Randomness;
+    static inline void InitRandomness(Randomness *r) {
+        uint64_t * rdata = reinterpret_cast<uint64_t *>(r);
+        rdata[0] = get64rand();
+        rdata[1] = get64rand();
+    }
+
+    __attribute__((always_inline))
+    static inline Word HashFunction(Word x, const Randomness *r) {
+        Word result;
+        siphash(reinterpret_cast<uint8_t *>(&result),
+                reinterpret_cast<const uint8_t *>(&x), sizeof(Word),
+                reinterpret_cast<const uint8_t *>(r));
+        return result;
+    }
+
+    /**
+    * We want GenericPack to be usable as a C++ hasher
+    */
+    SipPack() : myr(NULL) {
+        myr = std::shared_ptr<Randomness>(new Randomness());
+        if (myr != NULL) {
+            InitRandomness(myr.get());
+        }
+    }
+
+    SipPack(const SipPack &o) : myr(o.myr) {}
+
+    __attribute__((always_inline)) inline size_t operator()(Word x) const {
+        return HashFunction(x, myr.get());
+    }
+
+   protected:
     std::shared_ptr<Randomness> myr;
 };
 
@@ -129,12 +169,6 @@ struct RandomWeakKoloboke64Pack
     : public GenericPack<uint64_t, random_weak_koloboke_t,
                          random_weak_koloboke_init, random_weak_koloboke64> {
     static constexpr auto NAME = "RWKolo64";
-};
-
-
-struct RandomKoloboke64Pack
-        : public GenericPack<uint64_t, koloboke_t, randomized_koloboke_init, koloboke64> {
-    static constexpr auto NAME = "Koloboke64";
 };
 
 struct Zobrist64Pack
