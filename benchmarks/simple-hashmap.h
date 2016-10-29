@@ -33,10 +33,27 @@ struct HashSet {
                 return ::std::make_pair(true, i);
             }
         }
+        __builtin_unreachable();
         throw std::runtime_error("could not insert key");  // should we ever
                                                            // make it here, then
                                                            // there was no room
     }
+
+  ::std::size_t FindPresentWithOffset(const Key k, ::std::size_t offset) const {
+        const size_t h = hasher(k);
+        for (size_t i = 0; i < capacity; ++i) {
+            const size_t s =
+                mask &
+                (i + (UseHighBits ? (h >> (64 - log_capacity)) : h) - offset);
+            if (k == slots[s]) return i;
+        }
+        __builtin_unreachable();
+        throw std::runtime_error("could not find key");  // should we ever
+                                                         // make it here, then
+                                                         // there was no room
+    }
+
+
 
     ::std::pair<bool, ::std::size_t> Insert(const Key k) {
         if (0 == k) {

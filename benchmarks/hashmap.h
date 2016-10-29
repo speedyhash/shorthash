@@ -94,8 +94,9 @@ public:
     using iterator = hm_iterator<HashMap, value_type>;
     using const_iterator = hm_iterator<const HashMap, const value_type>;
 
-public:
-    HashMap(size_type bucket_count_var, key_type empty_key, float loadFactor) : empty_key_(empty_key), loadFactor_(loadFactor) {
+   public:
+    HashMap(size_type bucket_count_var, key_type empty_key, float loadFactor)
+        : empty_key_(empty_key), loadFactor_(loadFactor), hasher_() {
         size_t pow2 = 1;
         while (pow2 < bucket_count_var) {
             pow2 <<= 1;
