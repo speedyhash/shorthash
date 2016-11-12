@@ -27,7 +27,8 @@ Key flip_bits(const Key k) {
 template <typename HashFamily, bool FlipBits = false, bool FullTable = false>
 size_t probe_length(size_t log_num_keys,
                     const vector<typename HashFamily::Word>& to_insert) {
-    HashSet<typename HashFamily::Word, HashFamily, FullTable> ht(log_num_keys);
+    HashSet < typename HashFamily::Word, HashFamily,
+        FullTable ? FillLimit::FULL : FillLimit::HALF > ht(log_num_keys);
     size_t result = 0;
     for (const auto k : to_insert) {
         result += ht.Insert(FlipBits ? flip_bits(k) : k).second;

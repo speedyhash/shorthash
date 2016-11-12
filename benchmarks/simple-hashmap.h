@@ -2,85 +2,92 @@
 #include <memory>
 #include <utility>
 
-template <typename Key, typename HashFamily, bool UseFullCapacity = false,
-          bool UseHighBits = false>
+enum class FillLimit { HALF, FULL };
+enum class HashBits { LOW, HIGH };
+
+template <typename Key, typename HashFamily,
+          FillLimit FILL_LIMIT = FillLimit::HALF,
+          HashBits HASH_BITS = HashBits::LOW>
 struct HashSet {
-    HashFamily hasher;
-    ::std::size_t size, capacity, mask, log_capacity;
-    ::std::unique_ptr<Key[]> slots;
-    bool has_zero;
+    using size_t = ::std::size_t;
+    using SuccessDistance = ::std::pair<bool, size_t>;
+    HashFamily hasher_;
+    size_t size_, capacity_, mask_, log_capacity_;
+    ::std::unique_ptr<Key[]> slots_;
+    bool has_zero_;
 
-    HashSet(::std::size_t log_capacity_param = 3)
-        : hasher(),
-          size(0),
-          capacity(1ull << log_capacity_param),
-          mask(capacity - 1),
-          log_capacity(log_capacity_param),
-          slots(new Key[capacity]()),
-          has_zero(false) {}
+    HashSet(size_t log_capacity = 3)
+        : hasher_(),
+          size_(0),
+          capacity_(1ull << log_capacity),
+          mask_(capacity_ - 1),
+          log_capacity_(log_capacity),
+          slots_(new Key[capacity_]()),
+          has_zero_(false) {}
 
-    static ::std::pair<bool, ::std::size_t> InsertNonZeroWithoutResize(
-        const HashFamily &hasher, const ::std::size_t capacity,
-        const ::std::size_t mask, const ::std::size_t log_capacity, Key slots[],
-        const Key k) {
-        const size_t h = hasher(k);
-        for (size_t i = 0; i < capacity; ++i) {
-            const size_t s =
-                mask & (i + (UseHighBits ? (h >> (64 - log_capacity)) : h));
-            if (k == slots[s]) return ::std::make_pair(false, i);
+   protected:
+    size_t GetIndex(size_t hash_value, size_t offset) const {
+        if (HASH_BITS == HashBits::HIGH) {
+            constexpr size_t HASH_SIZE = sizeof(hash_value) * CHAR_BIT;
+            hash_value = hash_value >> (HASH_SIZE - log_capacity_);
+        }
+        return mask_ & (hash_value + offset);
+    }
+
+    SuccessDistance InsertNonZeroWithoutResize(const Key k, Key slots[]) const {
+        const size_t h = hasher_(k);
+        for (size_t i = 0; true; ++i) {
+            const size_t s = GetIndex(h, i);
+            if (k == slots[s]) return {false, i};
             if (0 == slots[s]) {
                 slots[s] = k;
-                return ::std::make_pair(true, i);
+                return {true, i};
             }
         }
         __builtin_unreachable();
-        throw std::runtime_error("could not insert key");  // should we ever
-                                                           // make it here, then
-                                                           // there was no room
     }
 
-  ::std::size_t FindPresentWithOffset(const Key k, ::std::size_t offset) const {
-        const size_t h = hasher(k);
-        for (size_t i = 0; i < capacity; ++i) {
-            const size_t s =
-                mask &
-                (i + (UseHighBits ? (h >> (64 - log_capacity)) : h) - offset);
-            if (k == slots[s]) return i;
+    bool Full() const {
+        if (FILL_LIMIT == FillLimit::HALF) {
+            return size_ > capacity_ / 2;
+        } else {
+            return size_ >= capacity_;
+        }
+    }
+
+   public:
+    size_t FindPresent(const Key k) const {
+        const size_t h = hasher_(k);
+        for (size_t i = 0; true; ++i) {
+            const size_t s = GetIndex(h, i);
+            if (k == slots_[s]) return i;
         }
         __builtin_unreachable();
-        throw std::runtime_error("could not find key");  // should we ever
-                                                         // make it here, then
-                                                         // there was no room
     }
 
-
-
-    ::std::pair<bool, ::std::size_t> Insert(const Key k) {
+    SuccessDistance Insert(const Key k) {
         if (0 == k) {
-            has_zero = true;
-            return ::std::make_pair(true, 0);
+            has_zero_ = true;
+            return {true, 0};
         }
-        const auto result = InsertNonZeroWithoutResize(
-            hasher, capacity, mask, log_capacity, slots.get(), k);
+        const auto result = InsertNonZeroWithoutResize(k, slots_.get());
         if (result.first) {
-            ++size;
-            if (size >= (capacity/(UseFullCapacity ? 1 : 2))) Upsize();
+            ++size_;
+            if (Full()) Upsize();
         }
         return result;
     }
 
     void Upsize() {
-        ::std::unique_ptr<Key[]> new_slots(new Key[2 * capacity]());
-        capacity *= 2;
-        mask = capacity - 1;
-        log_capacity++;
-        for (::std::size_t i = 0; i < capacity / 2; ++i) {
-            if (0 != slots[i]) {
-                InsertNonZeroWithoutResize(hasher, capacity, mask, log_capacity,
-                                           new_slots.get(), slots[i]);
+        decltype(slots_) new_slots(new Key[2 * capacity_]());
+        capacity_ *= 2;
+        mask_ = capacity_ - 1;
+        log_capacity_++;
+        for (size_t i = 0; i < capacity_ / 2; ++i) {
+            if (0 != slots_[i]) {
+                InsertNonZeroWithoutResize(slots_[i], new_slots.get());
             }
         }
-        ::std::swap(slots, new_slots);
+        ::std::swap(slots_, new_slots);
     }
-
 };

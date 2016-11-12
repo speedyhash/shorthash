@@ -29,21 +29,21 @@ void populate(ht &h, vector<uint64_t> &keys) {
 }
 
 template <typename ht>
-size_t query(ht &h, vector<uint64_t> &keys, size_t howmany, size_t offset) {
+size_t query(ht &h, vector<uint64_t> &keys, size_t howmany) {
     size_t sum = 0;
     for (size_t i = 0; i < howmany; ++i) {
-      sum += h.FindPresentWithOffset(keys[i], offset);
+      sum += h.FindPresent(keys[i]);
     }
     return sum;
 }
 
 template <typename ht>
-void query_avg_probed_keys(ht &h, vector<uint64_t> &keys, const size_t offset,
-                           double *average, double *stderrprob) {
+void query_avg_probed_keys(ht &h, vector<uint64_t> &keys, double *average,
+                           double *stderrprob) {
     double sum = 0;
     double sumsquare = 0;
     for (size_t i = 0; i < keys.size(); ++i) {
-        double probed = h.FindPresentWithOffset(keys[i], offset);
+        double probed = h.FindPresent(keys[i]);
         sum += probed;
         sumsquare += probed * probed;
     }
@@ -52,11 +52,10 @@ void query_avg_probed_keys(ht &h, vector<uint64_t> &keys, const size_t offset,
 }
 
 template <typename ht>
-size_t query_max_probed_keys(ht &h, vector<uint64_t> &keys,
-                             const size_t offset) {
+size_t query_max_probed_keys(ht &h, vector<uint64_t> &keys) {
     size_t mp = 0;
     for (size_t i = 0; i < keys.size(); ++i) {
-        size_t tp = h.FindPresentWithOffset(keys[i], offset);
+        size_t tp = h.FindPresent(keys[i]);
         if (tp > mp) mp = tp;
     }
     return mp;
@@ -67,7 +66,7 @@ template <bool robinhood>
 struct BasicWorker {
     template <typename Pack>
     static inline void Go(std::vector<std::vector<uint64_t> > &keys, const int repeat,
-                          size_t howmanyqueries, size_t offset) {
+                          size_t howmanyqueries) {
         double querycycles = 0;
         double probesperquery = 0;
         double probesperquerystderr = 0;
@@ -85,16 +84,16 @@ struct BasicWorker {
             cycles_start = RDTSC_START();
             populate(hm, keys[r]);
             cycles_end = RDTSC_FINAL();
-            assert(hm.size + hm.has_zero == howmany);
+            assert(hm.size_ + hm.has_zero_ == howmany);
 
             cycles_start = RDTSC_START();
-            sum += query(hm, keys[r], howmanyqueries, offset);
+            sum += query(hm, keys[r], howmanyqueries);
             cycles_end = RDTSC_FINAL();
             querycycles += (cycles_end - cycles_start) * 1.0 / howmanyqueries;
             double pk, pkerr;
-            query_avg_probed_keys(hm, keys[r], offset, &pk, &pkerr);
+            query_avg_probed_keys(hm, keys[r], &pk, &pkerr);
             max_avg_probes = std::max<double>(pk, max_avg_probes);
-            double mk = query_max_probed_keys(hm, keys[r], offset);
+            double mk = query_max_probed_keys(hm, keys[r]);
             probesperquery += pk;
             probesperquerystderr += pkerr;
             maxprobesperquery += mk;
@@ -122,8 +121,7 @@ struct BasicWorker {
 
 template <bool robinhood = true>
 void demorandom(const uint64_t howmany,
-                const float repeat, const size_t howmanyqueries,
-                const size_t offset) {
+                const float repeat, const size_t howmanyqueries) {
     srand(0);
     if (robinhood) std::cout << " Robin Hood activated " << std::endl;
     std::vector<std::vector<uint64_t> > allkeys;
@@ -147,7 +145,7 @@ void demorandom(const uint64_t howmany,
               << std::endl;
 
     ForEachT<MYHASHER>::template Go<BasicWorker<robinhood> >(
-        allkeys, repeat, howmanyqueries, offset);
+        allkeys, repeat, howmanyqueries);
     std::cout << std::endl;
 }
 
@@ -157,8 +155,6 @@ int main() {
     const int maxsize = 64 * 1024 * 1024;
 
     for (int size = minsize; size <= maxsize; size *= 4) {
-        for (size_t offset = 1; offset < 64; offset *= 2) {
-            demorandom<false>(size, repeat, size, offset);
-        }
+        demorandom<false>(size, repeat, size);
     }
 }
