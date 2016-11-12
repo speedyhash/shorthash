@@ -148,12 +148,14 @@ struct SplitHashSet {
     size_t FindPresent(const Key k) const {
         const auto easy = fast_.Find(k);
         if (easy.first != ProbeStatus::LONG) return easy.second;
-        return slow_.FindPresent(k);
+        return easy.second + slow_.FindPresent(k);
     }
 
-     SuccessDistance Insert(const Key k) {
-       const auto easy = fast_.Insert(k, &slow_);
+    SuccessDistance Insert(const Key k) {
+        const auto easy = fast_.Insert(k, &slow_);
         if (easy.first != ProbeStatus::LONG) return easy;
-        return slow_.Insert(k);
+        auto result = slow_.Insert(k);
+        result.second += easy.second;
+        return result;
     }
 };
