@@ -32,9 +32,14 @@ class GenericPack {
     static inline void InitRandomness(Randomness *r) { InitRandomnessP(r); }
 
     __attribute__((always_inline)) static inline Word
-    HashFunction(Word x, const Randomness *r, const int shift = 0) {
+    HashFunction(Word x, const Randomness *r, const int shift) {
         if (HASH_BITS == HashBits::LOW) return HashFunctionP(x, r);
         return HashFunctionP(x, r) >> shift;
+    }
+
+    __attribute__((always_inline)) static inline Word
+    HashFunction(Word x, const Randomness *r) {
+        return HashFunctionP(x, r);
     }
 
     /**
