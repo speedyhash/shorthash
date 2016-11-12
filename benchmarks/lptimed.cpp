@@ -19,18 +19,15 @@
 
 using namespace std;
 
-std::random_device rd;
-std::mt19937 g(rd());
-
 template <typename ht>
-void populate(ht &h, vector<uint64_t> &keys) {
+void populate(ht &h, const vector<uint64_t> &keys) {
     for (size_t i = 0; i < keys.size(); ++i) {
         h.Insert(keys[i]);
     }
 }
 
 template <typename ht>
-size_t query(ht &h, vector<uint64_t> &keys, size_t howmany) {
+size_t query(ht &h, const vector<uint64_t> &keys, size_t howmany) {
     size_t sum = 0;
     for (size_t i = 0; i < howmany; ++i) {
       sum += h.FindPresent(keys[i]);
@@ -39,7 +36,7 @@ size_t query(ht &h, vector<uint64_t> &keys, size_t howmany) {
 }
 
 template <typename ht>
-void query_avg_probed_keys(ht &h, vector<uint64_t> &keys, double *average,
+void query_avg_probed_keys(ht &h, const vector<uint64_t> &keys, double *average,
                            double *stderrprob) {
     double sum = 0;
     double sumsquare = 0;
@@ -53,7 +50,7 @@ void query_avg_probed_keys(ht &h, vector<uint64_t> &keys, double *average,
 }
 
 template <typename ht>
-size_t query_max_probed_keys(ht &h, vector<uint64_t> &keys) {
+size_t query_max_probed_keys(ht &h, const vector<uint64_t> &keys) {
     size_t mp = 0;
     for (size_t i = 0; i < keys.size(); ++i) {
         size_t tp = h.FindPresent(keys[i]);
@@ -61,19 +58,18 @@ size_t query_max_probed_keys(ht &h, vector<uint64_t> &keys) {
     }
     return mp;
 }
-const uint64_t EMPTY = 0xFFFFFFFFFFFFFFFF;
+
 
 struct BasicWorker {
     template <typename Set>
-    static inline void Go(std::vector<std::vector<uint64_t> > &keys, const int repeat,
+    static inline void Go(const std::vector<uint64_t> &keys, const int repeat,
                           size_t howmanyqueries) {
         double querycycles = 0;
         double probesperquery = 0;
         double probesperquerystderr = 0;
         double maxprobesperquery = 0;
 
-        size_t howmany = keys[0].size();
-        assert(howmanyqueries <= howmany);
+        assert(howmanyqueries <= keys.size());
         std::cout << setw(20) << string(Set::Name()) << " ";
         std::cout.flush();
         uint64_t sum = 0;
@@ -82,18 +78,18 @@ struct BasicWorker {
         for (int r = 0; r < repeat; ++r) {
             Set hm;
             cycles_start = RDTSC_START();
-            populate(hm, keys[r]);
+            populate(hm, keys);
             cycles_end = RDTSC_FINAL();
-            assert(hm.Ndv() == howmany);
+            assert(hm.Ndv() == keys.size());
 
             cycles_start = RDTSC_START();
-            sum += query(hm, keys[r], howmanyqueries);
+            sum += query(hm, keys, howmanyqueries);
             cycles_end = RDTSC_FINAL();
             querycycles += (cycles_end - cycles_start) * 1.0 / howmanyqueries;
             double pk, pkerr;
-            query_avg_probed_keys(hm, keys[r], &pk, &pkerr);
+            query_avg_probed_keys(hm, keys, &pk, &pkerr);
             max_avg_probes = std::max<double>(pk, max_avg_probes);
-            double mk = query_max_probed_keys(hm, keys[r]);
+            double mk = query_max_probed_keys(hm, keys);
             probesperquery += pk;
             probesperquerystderr += pkerr;
             maxprobesperquery += mk;
@@ -114,34 +110,35 @@ struct BasicWorker {
     static inline void Stop() {}
 };
 
-#define MYHASHER                                 \
-    SepChain<uint64_t, UnivMultiplyShift64Pack>, \
-        HashSet<uint64_t, ClQuartic64Pack>, HashSet<uint64_t, Zobrist64Pack>
+#define MYHASHER                                                              \
+    SepChain<uint64_t, UnivMultiplyShift64Pack>,                              \
+        HashSet<uint64_t, ClQuartic64Pack>, HashSet<uint64_t, Zobrist64Pack>, \
+        SplitHashSet<uint64_t, UnivMultiplyShift64Pack, Zobrist64Pack, 1>,    \
+        SplitHashSet<uint64_t, UnivMultiplyShift64Pack, Zobrist64Pack, 2>,    \
+        SplitHashSet<uint64_t, UnivMultiplyShift64Pack, Zobrist64Pack, 3>,    \
+        SplitHashSet<uint64_t, UnivMultiplyShift64Pack, Zobrist64Pack, 4>,    \
+        SplitHashSet<uint64_t, UnivMultiplyShift64Pack, Zobrist64Pack, 5>,    \
+        SplitHashSet<uint64_t, UnivMultiplyShift64Pack, Zobrist64Pack, 6>,    \
+        SplitHashSet<uint64_t, UnivMultiplyShift64Pack, Zobrist64Pack, 7>,    \
+        SplitHashSet<uint64_t, UnivMultiplyShift64Pack, Zobrist64Pack, 8>
 
 void demorandom(const uint64_t howmany,
                 const float repeat, const size_t howmanyqueries) {
     srand(0);
-    std::vector<std::vector<uint64_t> > allkeys;
-    for (size_t r = 0; r < repeat; ++r) {
-        std::vector<uint64_t> keys;
-        for (uint64_t i = 1; i <= howmany; ++i) {
-            uint64_t newkey = get64rand();
-            while (newkey == EMPTY) newkey = get64rand();
-            keys.push_back(newkey);
-        }
-        allkeys.push_back(keys);
+    std::vector<uint64_t> keys;
+    for (uint64_t i = 0; i < howmany; ++i) {
+        keys.push_back(get64rand());
     }
 
     std::cout << howmany << " keys, " << repeat << " hash functions"
               << std::endl;
 
-    ForEachT<MYHASHER>::template Go<BasicWorker>(allkeys, repeat,
-                                                 howmanyqueries);
+    ForEachT<MYHASHER>::template Go<BasicWorker>(keys, repeat, howmanyqueries);
     std::cout << std::endl;
 }
 
 int main() {
-    const float repeat = 100;
+    const float repeat = 30;
     const int minsize = 1024;
     const int maxsize = 64 * 1024 * 1024;
 

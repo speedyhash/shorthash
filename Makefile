@@ -3,13 +3,13 @@
 #
 .SUFFIXES: .cpp .o .c .h
 
-SHARED_FLAGS = -fPIC -march=native -Wall -Wextra -Wshadow -Wno-unused-function
+SHARED_FLAGS = -march=native -Wall -Wextra -Wshadow -Wno-unused-function
 
 ifeq ($(DEBUG),1)
 FLAGS = $(SHARED_FLAGS) -ggdb -fsanitize=undefined -fno-omit-frame-pointer \
-    -fsanitize=address
+    -fsanitize=address -O0 -fno-inline-functions
 else
-FLAGS = $(SHARED_FLAGS) -O3
+FLAGS = $(SHARED_FLAGS) -O3 -fomit-frame-pointer
 endif # debug
 
 CFLAGS = $(FLAGS) -std=c99
