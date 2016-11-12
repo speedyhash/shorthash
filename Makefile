@@ -3,7 +3,7 @@
 #
 .SUFFIXES: .cpp .o .c .h
 
-SHARED_FLAGS = -fPIC -march=native -Wall -Wextra -Wshadow
+SHARED_FLAGS = -fPIC -march=native -Wall -Wextra -Wshadow -Wno-unused-function
 
 ifeq ($(DEBUG),1)
 FLAGS = $(SHARED_FLAGS) -ggdb -fsanitize=undefined -fno-omit-frame-pointer \
@@ -15,9 +15,9 @@ endif # debug
 CFLAGS = $(FLAGS) -std=c99
 CXXFLAGS =  $(FLAGS) -std=c++11
 
-all: benchmark.exe param_htbenchmark.exe htbenchmark.exe lptimed.exe bucketbenchmark.exe \
-    linearprobebenchmark.exe cw-trick-test.exe collision-test.exe worst.exe \
-    fig2a.exe $(OBJECTS)
+all: benchmark.exe param_htbenchmark.exe htbenchmark.exe lptimed.exe	\
+    bucketbenchmark.exe linearprobebenchmark.exe cw-trick-test.exe	\
+    collision-test.exe worst.exe fig2a.exe $(OBJECTS)
 
 HEADERS = include/clhash.h include/tabulated.h include/util.h \
     include/multiply-shift.h include/cw-trick.h benchmarks/hashpack.h \
@@ -29,9 +29,9 @@ siphash24.o: ./include/siphash24.c
 
 benchmark.exe: ./benchmarks/benchmark.cpp siphash24.o $(HEADERS)
 	$(CXX) $(CXXFLAGS) -o $@ $< -Iinclude siphash24.o
+
 param_htbenchmark.exe: ./benchmarks/param_htbenchmark.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -o $@ $< -Iinclude
-
 
 htbenchmark.exe: ./benchmarks/htbenchmark.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -o $@ $< -Iinclude
