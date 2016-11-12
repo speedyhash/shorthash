@@ -114,16 +114,13 @@ struct BasicWorker {
     SepChain<uint64_t, UnivMultiplyShift64Pack>,                              \
         HashSet<uint64_t, ClQuartic64Pack>, HashSet<uint64_t, Zobrist64Pack>, \
         SplitHashSet<uint64_t, UnivMultiplyShift64Pack, Zobrist64Pack, 1>,    \
-        SplitHashSet<uint64_t, UnivMultiplyShift64Pack, Zobrist64Pack, 2>,    \
-        SplitHashSet<uint64_t, UnivMultiplyShift64Pack, Zobrist64Pack, 3>,    \
-        SplitHashSet<uint64_t, UnivMultiplyShift64Pack, Zobrist64Pack, 4>,    \
-        SplitHashSet<uint64_t, UnivMultiplyShift64Pack, Zobrist64Pack, 5>,    \
-        SplitHashSet<uint64_t, UnivMultiplyShift64Pack, Zobrist64Pack, 6>,    \
-        SplitHashSet<uint64_t, UnivMultiplyShift64Pack, Zobrist64Pack, 7>,    \
-        SplitHashSet<uint64_t, UnivMultiplyShift64Pack, Zobrist64Pack, 8>
+        SplitHashSet<uint64_t, UnivMultiplyShift64Pack, Zobrist64Pack, 8>,    \
+        SplitHashSet<uint64_t, UnivMultiplyShift64Pack, Zobrist64Pack, 32>,   \
+        SplitHashSet<uint64_t, UnivMultiplyShift64Pack, Zobrist64Pack, 1024>, \
+        SplitHashSet<uint64_t, MultiplyShift64Pack, Zobrist64Pack, 32>
 
-void demorandom(const uint64_t howmany,
-                const float repeat, const size_t howmanyqueries) {
+void demorandom(const uint64_t howmany, const float repeat,
+                const size_t howmanyqueries) {
     srand(0);
     std::vector<uint64_t> keys;
     for (uint64_t i = 0; i < howmany; ++i) {
@@ -138,7 +135,7 @@ void demorandom(const uint64_t howmany,
 }
 
 int main() {
-    const float repeat = 30;
+    const float repeat = 100;
     const int minsize = 1024;
     const int maxsize = 64 * 1024 * 1024;
 

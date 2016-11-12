@@ -25,11 +25,9 @@ Key flip_bits(const Key k) {
     return result.to_ullong();
 }
 
-template <typename HashFamily, bool FlipBits = false, bool FullTable = false>
-size_t probe_length(size_t log_num_keys,
-                    const vector<typename HashFamily::Word>& to_insert) {
-    HashSet < typename HashFamily::Word, HashFamily,
-        FullTable ? FillLimit::FULL : FillLimit::HALF > ht(log_num_keys);
+template <typename Table, bool FlipBits = false, typename Word>
+size_t probe_length(size_t log_num_keys, const vector<Word>& to_insert) {
+    Table ht(log_num_keys);
     size_t result = 0;
     for (const auto k : to_insert) {
         result += ht.Insert(FlipBits ? flip_bits(k) : k).second;
@@ -48,9 +46,9 @@ int main() {
       shuffle(to_insert.begin(), to_insert.end(), g);
   }
   for (int i = 0; i < 100; ++i) {
-      results.push_back(
-          probe_length<RandomWeakKoloboke64Pack, /* FlipBits */ true,
-                       /* FullTable */ true>(LOG_NUM_KEYS, to_insert));
+      results.push_back(probe_length<
+          SplitHashSet<uint64_t, MultiplyShift64Pack, Zobrist64Pack, 1>,
+          /* FlipBits */ false>(LOG_NUM_KEYS, to_insert));
   }
   cout << "done" << endl;
   sort(results.begin(), results.end(), greater<uint64_t>());

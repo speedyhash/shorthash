@@ -16,8 +16,9 @@ template <typename Key, typename HashFamily,
           FillLimit FILL_LIMIT = FillLimit::HALF, size_t MAX_PROBE = 0>
 struct HashSet {
     using size_t = ::std::size_t;
-    HashFamily hasher_;
+    typename HashFamily::Randomness hasher_;
     size_t size_, capacity_, mask_;
+    int shift_;
     ::std::unique_ptr<Key[]> slots_;
     bool has_zero_;
 
@@ -28,7 +29,8 @@ struct HashSet {
           mask_(capacity_ - 1),
           slots_(new Key[capacity_]()),
           has_zero_(false) {
-        hasher_.shift = sizeof(size_t) * CHAR_BIT - log_capacity;
+        shift_ = sizeof(size_t) * CHAR_BIT - log_capacity;
+        HashFamily::InitRandomness(&hasher_);
     }
 
     static ::std::string Name() {
@@ -43,7 +45,7 @@ struct HashSet {
     }
 
     SuccessDistance InsertNonZeroWithoutResize(const Key k, Key slots[]) const {
-        const size_t h = hasher_(k);
+        const size_t h = HashFamily::HashFunction(k, &hasher_, shift_);
         for (size_t i = 0; (!MAX_PROBE) || (i < MAX_PROBE); ++i) {
             const size_t s = GetIndex(h, i);
             if (k == slots[s]) return {ProbeStatus::FULL, i};
@@ -66,7 +68,7 @@ struct HashSet {
    public:
     size_t FindPresent(const Key k) const {
         if (!k) return 0;
-        const size_t h = hasher_(k);
+        const size_t h = HashFamily::HashFunction(k, &hasher_, shift_);
         for (size_t i = 0; true; ++i) {
             const size_t s = GetIndex(h, i);
             if (k == slots_[s]) return i;
@@ -76,7 +78,7 @@ struct HashSet {
 
     SuccessDistance Find(const Key k) const {
         if (!k) return {has_zero_ ? ProbeStatus::FULL : ProbeStatus::EMPTY, 0};
-        const size_t h = hasher_(k);
+        const size_t h = HashFamily::HashFunction(k, &hasher_, shift_);
         for (size_t i = 0; (!MAX_PROBE) || (i < MAX_PROBE); ++i) {
             const size_t s = GetIndex(h, i);
             if (k == slots_[s]) return {ProbeStatus::FULL, i};
@@ -108,7 +110,7 @@ struct HashSet {
         decltype(slots_) new_slots(new Key[2 * capacity_]());
         capacity_ *= 2;
         mask_ = capacity_ - 1;
-        --hasher_.shift;
+        --shift_;
         for (size_t i = 0; i < capacity_ / 2; ++i) {
             if (0 != slots_[i]) {
                 const auto result =
@@ -124,11 +126,11 @@ struct HashSet {
 };
 
 template <typename Key, typename FastHashFamily, typename SlowHashFamily,
-          size_t MAX_PROBE = 4>
+          size_t MAX_PROBE = 32, FillLimit FILL_LIMIT = FillLimit::HALF>
 struct SplitHashSet {
     using size_t = ::std::size_t;
 
-    HashSet<Key, FastHashFamily, FillLimit::HALF, MAX_PROBE> fast_;
+    HashSet<Key, FastHashFamily, FILL_LIMIT, MAX_PROBE> fast_;
     HashSet<Key, SlowHashFamily, FillLimit::HALF> slow_;
 
     SplitHashSet(size_t log_capacity = 3)
