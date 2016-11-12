@@ -63,9 +63,8 @@ size_t query_max_probed_keys(ht &h, vector<uint64_t> &keys) {
 }
 const uint64_t EMPTY = 0xFFFFFFFFFFFFFFFF;
 
-template <bool robinhood>
 struct BasicWorker {
-    template <typename Pack>
+    template <typename Set>
     static inline void Go(std::vector<std::vector<uint64_t> > &keys, const int repeat,
                           size_t howmanyqueries) {
         double querycycles = 0;
@@ -75,13 +74,13 @@ struct BasicWorker {
 
         size_t howmany = keys[0].size();
         assert(howmanyqueries <= howmany);
-        std::cout << setw(20) << string(Pack::NAME) << " ";
+        std::cout << setw(20) << string(Set::Name()) << " ";
         std::cout.flush();
         uint64_t sum = 0;
         uint64_t cycles_start, cycles_end;
         double max_avg_probes = 0;
         for (int r = 0; r < repeat; ++r) {
-            HashSet<uint64_t, Pack> hm;
+            Set hm;
             cycles_start = RDTSC_START();
             populate(hm, keys[r]);
             cycles_end = RDTSC_FINAL();
@@ -115,16 +114,13 @@ struct BasicWorker {
     static inline void Stop() {}
 };
 
-#define MYHASHER                                                            \
-    Murmur64Pack, Koloboke64Pack, MultiplyShift64Pack, ClLinear64Pack, Toeplitz64Pack, ClQuadratic64Pack, \
-        ClFastQuadratic64Pack, ThorupZhangCWQuadratic64Pack, ClCubic64Pack, \
-        ThorupZhangCWCubic64Pack, ClQuartic64Pack, Zobrist64Pack, ThorupZhang64Pack
+#define MYHASHER                                 \
+    SepChain<uint64_t, UnivMultiplyShift64Pack>, \
+        HashSet<uint64_t, ClQuartic64Pack>, HashSet<uint64_t, Zobrist64Pack>
 
-template <bool robinhood = true>
 void demorandom(const uint64_t howmany,
                 const float repeat, const size_t howmanyqueries) {
     srand(0);
-    if (robinhood) std::cout << " Robin Hood activated " << std::endl;
     std::vector<std::vector<uint64_t> > allkeys;
     for (size_t r = 0; r < repeat; ++r) {
         std::vector<uint64_t> keys;
@@ -136,26 +132,20 @@ void demorandom(const uint64_t howmany,
         allkeys.push_back(keys);
     }
 
-    std::cout << "populating a hash table with " << howmany
-              << " random 64-bit keys and then retrieving them. " << std::endl;
-    std::cout << "number of consecutive queries on same hash table = "
-              << howmanyqueries << std::endl;
-
-    std::cout << "We repeat with " << repeat
-              << " different hash functions, using the different keys."
+    std::cout << howmany << " keys, " << repeat << " hash functions"
               << std::endl;
 
-    ForEachT<MYHASHER>::template Go<BasicWorker<robinhood> >(
-        allkeys, repeat, howmanyqueries);
+    ForEachT<MYHASHER>::template Go<BasicWorker>(allkeys, repeat,
+                                                 howmanyqueries);
     std::cout << std::endl;
 }
 
 int main() {
-    const float repeat = 1;
+    const float repeat = 100;
     const int minsize = 1024;
     const int maxsize = 64 * 1024 * 1024;
 
     for (int size = minsize; size <= maxsize; size *= 4) {
-        demorandom<false>(size, repeat, size);
+        demorandom(size, repeat, size);
     }
 }

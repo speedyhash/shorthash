@@ -5,15 +5,13 @@
 #include <utility>
 #include <vector>
 
-#include "simple-hashmap.h"
-
-template <typename Key, typename HashFamily, HashBits HASH_BITS = HashBits::LOW>
+template <typename Key, typename HashFamily>
 struct SepChain {
     using size_t = ::std::size_t;
     using SuccessDistance = ::std::pair<bool, size_t>;
     using Chain = ::std::vector<Key>;
     HashFamily hasher_;
-    size_t size_, capacity_, mask_, log_capacity_;
+    size_t size_, capacity_, mask_;
     ::std::unique_ptr<Chain[]> slots_;
 
     SepChain(size_t log_capacity = 3)
@@ -21,19 +19,20 @@ struct SepChain {
           size_(0),
           capacity_(1ull << log_capacity),
           mask_(capacity_ - 1),
-          log_capacity_(log_capacity),
-          slots_(new Chain[capacity_]()) {}
+          slots_(new Chain[capacity_]()) {
+        hasher_.shift = sizeof(size_t) * CHAR_BIT - log_capacity;
+    }
+
+    static ::std::string Name() {
+        return ::std::string("SC ") + HashFamily::NAME;
+    }
 
     size_t Ndv() const { return size_; }
 
    protected:
     size_t GetIndex(const Key k) const {
-        auto hash_value = hasher_(k);
-        if (HASH_BITS == HashBits::HIGH) {
-            constexpr size_t HASH_SIZE = sizeof(hash_value) * CHAR_BIT;
-            hash_value = hash_value >> (HASH_SIZE - log_capacity_);
-        }
-        return mask_ & hash_value;
+        if (HashFamily::NEEDS_MASK) return hasher_(k) & mask_;
+        return hasher_(k);
     }
 
     SuccessDistance InsertNonZeroWithoutResize(const Key k,
@@ -68,7 +67,7 @@ struct SepChain {
         decltype(slots_) new_slots(new Chain[2 * capacity_]());
         capacity_ *= 2;
         mask_ = capacity_ - 1;
-        log_capacity_++;
+        --hasher_.shift;
         for (size_t i = 0; i < capacity_ / 2; ++i) {
             for (Key k : slots_[i]) {
                 InsertNonZeroWithoutResize(k, new_slots.get());

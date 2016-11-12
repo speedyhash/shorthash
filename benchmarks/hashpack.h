@@ -1,3 +1,5 @@
+#pragma once
+
 #include <memory>
 
 extern "C" {
@@ -14,43 +16,48 @@ extern "C" {
 #include "siphash24.h"
 }
 
+enum class HashBits { LOW, HIGH };
+
 template <typename WordP, typename RandomnessP,
           void (*InitRandomnessP)(RandomnessP *),
-          WordP (*HashFunctionP)(WordP, const RandomnessP *)>
+          WordP (*HashFunctionP)(WordP, const RandomnessP *),
+          HashBits HASH_BITS = HashBits::LOW>
 class GenericPack {
-public:
+   public:
     typedef WordP Word;
     typedef RandomnessP Randomness;
-    static inline void InitRandomness(Randomness *r) {
-        InitRandomnessP(r);
-    }
 
-    __attribute__((always_inline))
-    static inline Word HashFunction(Word x, const Randomness *r) {
+    static constexpr bool NEEDS_MASK = HASH_BITS == HashBits::LOW;
+
+    static inline void InitRandomness(Randomness *r) { InitRandomnessP(r); }
+
+    __attribute__((always_inline)) static inline Word
+        HashFunction(Word x, const Randomness *r) {
         return HashFunctionP(x, r);
     }
 
     /**
     * We want GenericPack to be usable as a C++ hasher
     */
-    GenericPack() : myr(NULL) {
+    GenericPack() : shift(0), myr(NULL) {
         myr = std::shared_ptr<Randomness>(new Randomness());
-        if(myr != NULL) {
+        if (myr != NULL) {
             InitRandomness(myr.get());
         }
     }
 
-    GenericPack(const GenericPack & o) : myr(o.myr) {
+    GenericPack(const GenericPack &o) : myr(o.myr) {}
+
+    __attribute__((always_inline)) inline size_t operator()(Word x) const {
+        if (HASH_BITS == HashBits::LOW) return HashFunction(x, myr.get());
+        return HashFunction(x, myr.get()) >> shift;
     }
 
+    int shift;
 
-    __attribute__((always_inline))
-    inline size_t operator()(Word x) const {
-        return HashFunction(x,myr.get());
-    }
-
-  protected:
+   protected:
     std::shared_ptr<Randomness> myr;
+
 };
 
 struct SipPack {
@@ -72,9 +79,6 @@ struct SipPack {
         return result;
     }
 
-    /**
-    * We want GenericPack to be usable as a C++ hasher
-    */
     SipPack() : myr(NULL) {
         myr = std::shared_ptr<Randomness>(new Randomness());
         if (myr != NULL) {
@@ -87,6 +91,8 @@ struct SipPack {
     __attribute__((always_inline)) inline size_t operator()(Word x) const {
         return HashFunction(x, myr.get());
     }
+
+    int shift;
 
    protected:
     std::shared_ptr<Randomness> myr;
@@ -221,8 +227,9 @@ struct MultiplyShift64Pack
 };
 
 struct UnivMultiplyShift64Pack
-        : public GenericPack<uint64_t, UnivMultiplyShift64Randomness,
-          UnivMultiplyShift64Init, UnivMultiplyShift64> {
+    : public GenericPack<uint64_t, UnivMultiplyShift64Randomness,
+                         UnivMultiplyShift64Init, UnivMultiplyShift64,
+                         HashBits::HIGH> {
     static constexpr auto NAME = "UMS64";
 };
 
