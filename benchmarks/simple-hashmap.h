@@ -1,4 +1,5 @@
-#include <cassert>
+#pragma once
+
 #include <memory>
 #include <utility>
 
@@ -24,6 +25,8 @@ struct HashSet {
           log_capacity_(log_capacity),
           slots_(new Key[capacity_]()),
           has_zero_(false) {}
+
+  size_t Ndv() const {return size_ + has_zero_; }
 
    protected:
     size_t GetIndex(size_t hash_value, size_t offset) const {

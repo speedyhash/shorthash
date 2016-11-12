@@ -14,6 +14,7 @@
 
 #include "hashpack.h"
 #include "simple-hashmap.h"
+#include "sep-chaining.h"
 #include "timers.hpp"
 
 using namespace std;
@@ -84,7 +85,7 @@ struct BasicWorker {
             cycles_start = RDTSC_START();
             populate(hm, keys[r]);
             cycles_end = RDTSC_FINAL();
-            assert(hm.size_ + hm.has_zero_ == howmany);
+            assert(hm.Ndv() == howmany);
 
             cycles_start = RDTSC_START();
             sum += query(hm, keys[r], howmanyqueries);
