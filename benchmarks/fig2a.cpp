@@ -6,6 +6,7 @@
 #include <bitset>
 #include <climits>
 #include <utility>
+#include <random>
 
 #include "hashpack.h"
 #include "simple-hashmap.h"
