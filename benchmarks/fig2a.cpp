@@ -37,23 +37,23 @@ size_t probe_length(size_t log_num_keys, const vector<Word>& to_insert) {
     return result;
 }
 
+size_t dummy = 0;
+
 template <typename Table, bool FlipBits = false, typename Word>
 size_t build_time(size_t log_num_keys, const vector<Word>& to_insert) {
     Table ht(log_num_keys);
-    size_t result = 0;
     const auto cycles_start = RDTSC_START();
     for (const auto k : to_insert) {
-        result += ht.Insert(FlipBits ? flip_bits(k) : k).second;
+        dummy += ht.Insert(FlipBits ? flip_bits(k) : k).second;
     }
     const auto cycles_end = RDTSC_FINAL();
-    cerr << result;
     return cycles_end - cycles_start;
 }
 
 
 int main() {
   vector<size_t> results;
-  static const size_t LOG_NUM_KEYS = 20;
+  static const size_t LOG_NUM_KEYS = 18;
   vector<uint64_t> to_insert(1 << LOG_NUM_KEYS);
   iota(to_insert.begin(), to_insert.end(), get64rand());
   {
@@ -65,9 +65,11 @@ int main() {
       results.push_back(build_time<
           // SplitHashSet<uint64_t, MultiplyShift64Pack, Zobrist64Pack, 4>,
           // HashSet<uint64_t, MultiplyShift64Pack>,
-          SepChain<uint64_t, MultiplyShift64Pack>,
+          HashSet<uint64_t, Zobrist64Pack>,
+          //          SepChain<uint64_t, MultiplyShift64Pack>,
           /* FlipBits */ false>(LOG_NUM_KEYS, to_insert));
   }
+  cerr << dummy << endl;
   cout << "done" << endl;
   sort(results.begin(), results.end(), greater<uint64_t>());
   for (const auto v : results) {
