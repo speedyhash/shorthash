@@ -11,6 +11,8 @@
 #include "hashpack.h"
 #include "simple-hashmap.h"
 #include "util.h"
+#include "timers.hpp"
+#include "sep-chaining.h"
 
 using namespace std;
 
@@ -35,6 +37,20 @@ size_t probe_length(size_t log_num_keys, const vector<Word>& to_insert) {
     return result;
 }
 
+template <typename Table, bool FlipBits = false, typename Word>
+size_t build_time(size_t log_num_keys, const vector<Word>& to_insert) {
+    Table ht(log_num_keys);
+    size_t result = 0;
+    const auto cycles_start = RDTSC_START();
+    for (const auto k : to_insert) {
+        result += ht.Insert(FlipBits ? flip_bits(k) : k).second;
+    }
+    const auto cycles_end = RDTSC_FINAL();
+    cerr << result;
+    return cycles_end - cycles_start;
+}
+
+
 int main() {
   vector<size_t> results;
   static const size_t LOG_NUM_KEYS = 20;
@@ -45,9 +61,11 @@ int main() {
       std::mt19937 g(rd());
       shuffle(to_insert.begin(), to_insert.end(), g);
   }
-  for (int i = 0; i < 100; ++i) {
-      results.push_back(probe_length<
-          SplitHashSet<uint64_t, MultiplyShift64Pack, Zobrist64Pack, 1>,
+  for (int i = 0; i < 1000; ++i) {
+      results.push_back(build_time<
+          // SplitHashSet<uint64_t, MultiplyShift64Pack, Zobrist64Pack, 4>,
+          // HashSet<uint64_t, MultiplyShift64Pack>,
+          SepChain<uint64_t, MultiplyShift64Pack>,
           /* FlipBits */ false>(LOG_NUM_KEYS, to_insert));
   }
   cout << "done" << endl;
