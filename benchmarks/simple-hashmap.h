@@ -34,7 +34,7 @@ struct HashSet {
     }
 
     static ::std::string Name() {
-        return ::std::string("LP ") + HashFamily::NAME;
+        return ::std::string("LP-") + HashFamily::NAME;
     }
 
     size_t Ndv() const { return size_ + has_zero_; }

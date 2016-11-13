@@ -3,7 +3,8 @@
 #
 .SUFFIXES: .cpp .o .c .h
 
-SHARED_FLAGS = -march=native -Wall -Wextra -Wshadow -Wno-unused-function
+SHARED_FLAGS = -march=native -Wall -Wextra -Wshadow -Wno-unused-function \
+    -Wno-missing-braces
 
 ifeq ($(DEBUG),1)
 FLAGS = $(SHARED_FLAGS) -ggdb -fsanitize=undefined -fno-omit-frame-pointer \

@@ -33,7 +33,7 @@ struct ReHashSet {
     }
 
     static ::std::string Name() {
-        return ::std::string("ReLP ") + HashFamily::NAME;
+        return ::std::string("ReLP-") + HashFamily::NAME;
     }
 
     size_t Ndv() const { return size_ + has_zero_; }

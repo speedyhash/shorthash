@@ -51,6 +51,34 @@ size_t build_time(size_t log_num_keys, const vector<Word>& to_insert) {
     return cycles_end - cycles_start;
 }
 
+template <typename Table, bool FlipBits = false, typename Word>
+vector<size_t> build_times(size_t samples, size_t log_num_keys,
+                           const vector<Word>& to_insert) {
+    vector<size_t> result(samples);
+    ::std::generate(result.begin(), result.end(), [&]() {
+        return build_time<Table, FlipBits>(log_num_keys, to_insert);
+    });
+    sort(result.begin(), result.end(), ::std::greater<uint64_t>());
+    return result;
+}
+
+template <typename... Tables>
+void print_build_times(size_t samples, size_t log_num_keys,
+                       const vector<uint64_t>& to_insert) {
+    const array<vector<size_t>, sizeof...(Tables)> results(
+        {build_times<Tables>(samples, log_num_keys, to_insert)...});
+    const array<string, sizeof...(Tables)> names({Tables::Name()...});
+    for (const auto& name : names) {
+        cout << name << ' ';
+    }
+    cout << endl;
+    for (size_t i = 0; i < results[0].size(); ++i) {
+        for (const auto& result : results) {
+            cout << result[i] << ' ';
+        }
+        cout << endl;
+    }
+}
 
 int main() {
   vector<size_t> results;
@@ -62,19 +90,8 @@ int main() {
       std::mt19937 g(rd());
       shuffle(to_insert.begin(), to_insert.end(), g);
   }
-  for (int i = 0; i < 1000; ++i) {
-      results.push_back(build_time<
-          // SplitHashSet<uint64_t, MultiplyShift64Pack, Zobrist64Pack, 4>,
-          // HashSet<uint64_t, MultiplyShift64Pack>,
-          ReHashSet<uint64_t, MultiplyShift64Pack>,
-          // HashSet<uint64_t, Zobrist64Pack>,
-          //          SepChain<uint64_t, MultiplyShift64Pack>,
-          /* FlipBits */ false>(LOG_NUM_KEYS, to_insert));
-  }
-  cerr << dummy << endl;
-  cout << "done" << endl;
-  sort(results.begin(), results.end(), greater<uint64_t>());
-  for (const auto v : results) {
-    cout << v << endl;
-  }
+  print_build_times<HashSet<uint64_t, MultiplyShift64Pack>,
+                    HashSet<uint64_t, Zobrist64Pack>,
+                    ReHashSet<uint64_t, MultiplyShift64Pack>>(
+      1 << 12, LOG_NUM_KEYS, to_insert);
 }
