@@ -23,7 +23,7 @@ HEADERS = include/clhash.h include/tabulated.h include/util.h		\
     include/multiply-shift.h include/cw-trick.h benchmarks/hashpack.h	\
     benchmarks/hashmap.h benchmarks/timers.hpp benchmarks/buckets.hpp	\
     include/linear.h include/identity.h benchmarks/simple-hashmap.h	\
-    benchmarks/sep-chaining.h
+    benchmarks/sep-chaining.h benchmarks/rehashset.h
 
 siphash24.o: ./include/siphash24.c
 	$(CC) $(CFLAGS) -o $@ $< -c

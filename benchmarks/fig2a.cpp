@@ -13,6 +13,7 @@
 #include "util.h"
 #include "timers.hpp"
 #include "sep-chaining.h"
+#include "rehashset.h"
 
 using namespace std;
 
@@ -53,7 +54,7 @@ size_t build_time(size_t log_num_keys, const vector<Word>& to_insert) {
 
 int main() {
   vector<size_t> results;
-  static const size_t LOG_NUM_KEYS = 18;
+  static const size_t LOG_NUM_KEYS = 20;
   vector<uint64_t> to_insert(1 << LOG_NUM_KEYS);
   iota(to_insert.begin(), to_insert.end(), get64rand());
   {
@@ -65,7 +66,8 @@ int main() {
       results.push_back(build_time<
           // SplitHashSet<uint64_t, MultiplyShift64Pack, Zobrist64Pack, 4>,
           // HashSet<uint64_t, MultiplyShift64Pack>,
-          HashSet<uint64_t, Zobrist64Pack>,
+          ReHashSet<uint64_t, MultiplyShift64Pack>,
+          // HashSet<uint64_t, Zobrist64Pack>,
           //          SepChain<uint64_t, MultiplyShift64Pack>,
           /* FlipBits */ false>(LOG_NUM_KEYS, to_insert));
   }
