@@ -96,26 +96,22 @@ struct ReHashSet {
         capacity_ = new_capacity;
         if (old_capacity == capacity_) {
             HashFamily::InitRandomness(&hasher_);
-            // ::std::cout << "Crowded " << capacity_ << " " << size_ << " "
-            //             << probe_distance_ << ::std::endl;
         }
         mask_ = capacity_ - 1;
         shift_ -= (old_capacity != capacity_);
         probe_distance_ = 0;
-        {
-            decltype(slots_) new_slots(new Key[capacity_]());
-            for (size_t i = 0; i < old_capacity / 2; ++i) {
-                if (0 != slots_[i]) {
-                    const auto result =
-                        InsertNonZeroWithoutResize(slots_[i], new_slots.get());
-                    probe_distance_ += result.second;
-                    if (Crowded()) {
-                        break;
-                    }
+        decltype(slots_) new_slots(new Key[capacity_]());
+        for (size_t i = 0; i < old_capacity; ++i) {
+            if (0 != slots_[i]) {
+                const auto result =
+                    InsertNonZeroWithoutResize(slots_[i], new_slots.get());
+                probe_distance_ += result.second;
+                if (Crowded()) {
+                    Resize(capacity_);
+                    return;
                 }
             }
-            if (!Crowded()) ::std::swap(slots_, new_slots);
         }
-        if (Crowded()) Resize(capacity_);
+        ::std::swap(slots_, new_slots);
     }
 };

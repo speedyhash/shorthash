@@ -16,6 +16,7 @@
 #include "simple-hashmap.h"
 #include "sep-chaining.h"
 #include "timers.hpp"
+#include "rehashset.h"
 
 using namespace std;
 
@@ -117,7 +118,8 @@ struct BasicWorker {
         SplitHashSet<uint64_t, UnivMultiplyShift64Pack, Zobrist64Pack, 8>,    \
         SplitHashSet<uint64_t, UnivMultiplyShift64Pack, Zobrist64Pack, 32>,   \
         SplitHashSet<uint64_t, UnivMultiplyShift64Pack, Zobrist64Pack, 1024>, \
-        SplitHashSet<uint64_t, MultiplyShift64Pack, Zobrist64Pack, 32>
+        SplitHashSet<uint64_t, MultiplyShift64Pack, Zobrist64Pack, 32>,       \
+        ReHashSet<uint64_t, UnivMultiplyShift64Pack>
 
 void demorandom(const uint64_t howmany, const float repeat,
                 const size_t howmanyqueries) {
