@@ -9,6 +9,7 @@ extern "C" {
 #include "tabulated.h"
 #include "crc.h"
 #include "murmur.h"
+#include "javasplittable.h"
 #include "fnv.h"
 #include "linear.h"
 #include "identity.h"
@@ -142,6 +143,13 @@ struct Murmur64Pack
         : public GenericPack<uint64_t, murmur64_t, murmur64_init, murmur64> {
     static constexpr auto NAME = "Murmur64";
 };
+
+
+struct JavaSplit64Pack
+        : public GenericPack<uint64_t, javasplit64_t, javasplit64_init, javasplit64> {
+    static constexpr auto NAME = "JavaSplit64";
+};
+
 
 struct FNV64Pack
         : public GenericPack<uint64_t, fnv64_t, fnv64_init, fnv64> {
