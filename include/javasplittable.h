@@ -15,10 +15,14 @@
 * Fast splittable pseudorandom number generators
 * http://dx.doi.org/10.1145/2714064.2660195
 */
+
+#include "util.h"
+
 typedef struct {
   int shift1;
   int shift2;
   int shift3;
+  uint64_t seed;
   uint64_t multiplier1;
   uint64_t multiplier2;
   uint64_t multiplier3;
@@ -29,6 +33,8 @@ void javasplit64_init(javasplit64_t *key) {
   key->shift1 = 30;
   key->shift2 = 27;
   key->shift3 = 31;
+  key->seed = get64rand();
+
   key->multiplier1 = UINT64_C(0x9E3779B97F4A7C15);
   key->multiplier2 = UINT64_C(0xBF58476D1CE4E5B9);
   key->multiplier3 = UINT64_C(0x94D049BB133111EB);
@@ -36,7 +42,7 @@ void javasplit64_init(javasplit64_t *key) {
 
 __attribute__((always_inline))
 inline uint64_t javasplit64(uint64_t h, const javasplit64_t * key) {
-	uint64_t z = (key->multiplier1 * h);
+	uint64_t z = (key->multiplier1 *  ( h + key-> seed) );
 	z = (z ^ (z >> key->shift1)) * key->multiplier2;
 	z = (z ^ (z >> key->shift2)) * key->multiplier3;
 	return z ^ (z >> key->shift3);
