@@ -21,7 +21,7 @@ all: benchmark.exe param_htbenchmark.exe htbenchmark.exe lptimed.exe	\
     collision-test.exe worst.exe fig2a.exe $(OBJECTS)
 
 HEADERS = include/clhash.h include/tabulated.h include/util.h		\
-    include/multiply-shift.h include/cw-trick.h benchmarks/hashpack.h	\
+    include/multiply-shift.h  include/faster-cw-trick.h include/cw-trick.h benchmarks/hashpack.h	\
     benchmarks/hashmap.h benchmarks/timers.hpp benchmarks/buckets.hpp	\
     include/linear.h include/identity.h benchmarks/simple-hashmap.h	\
     benchmarks/sep-chaining.h benchmarks/rehashset.h

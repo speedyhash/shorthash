@@ -5,6 +5,7 @@
 extern "C" {
 #include "clhash.h"
 #include "cw-trick.h"
+#include "faster-cw-trick.h"
 #include "multiply-shift.h"
 #include "tabulated.h"
 #include "crc.h"
@@ -295,6 +296,21 @@ struct ThorupZhangCWCubic64Pack
     static constexpr auto NAME = "TCWCubic64";
 };
 
+
+struct FasterCWLinear64Pack
+        : public GenericPack<uint64_t, FasterCWLinear64_t, FasterCWLinear64Init, FasterCWLinear64> {
+    static constexpr auto NAME = "FLinear64";
+};
+
+struct FasterCWQuadratic64Pack
+        : public GenericPack<uint64_t, FasterCWQuadratic64_t, FasterCWQuadratic64Init, FasterCWQuadratic64> {
+    static constexpr auto NAME = "FQuad64";
+};
+
+struct FasterCWCubic64Pack
+        : public GenericPack<uint64_t, FasterCWCubic64_t, FasterCWCubic64Init, FasterCWCubic64> {
+    static constexpr auto NAME = "FCubic64";
+};
 
 
 

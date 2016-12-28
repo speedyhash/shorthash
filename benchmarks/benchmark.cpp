@@ -195,6 +195,13 @@ int main() {
            "ind., cubic is 4-wise ind.\n");
     printf("Keys are flushed at the beginning of each run.\n");
     const vector<uint32_t> sizes{10, 20, 100, 1000, 10000, 100000,1000000};
+    // focus on tabulation + polynomial hashing
+    basic<Zobrist64Pack,
+          WZobrist64Pack, ClCubic64Pack, 
+          ThorupZhangCWCubic64Pack,
+          FasterCWCubic64Pack>(
+        sizes, repeat);
+
     basic<Identity64Pack, Koloboke64Pack, BitMixing64Pack, ClBitMixing64Pack,
           FNV64Pack, JavaSplit64Pack, Murmur64Pack, CRC32_64Pack, Cyclic64Pack, Zobrist64Pack,
           WZobrist64Pack, ZobristTranspose64Pack, ThorupZhang64Pack,
