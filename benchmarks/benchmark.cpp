@@ -196,7 +196,7 @@ int main() {
     printf("Keys are flushed at the beginning of each run.\n");
     const vector<uint32_t> sizes{10, 20, 100, 1000, 10000, 100000,1000000};
     // focus on tabulation + polynomial hashing
-    basic<WZobrist64Pack, ClCubic64Pack, 
+    basic<JavaSplit64Pack,Zobrist64Pack,WZobrist64Pack, ClCubic64Pack, 
           ThorupZhangCWCubic64Pack>(
         sizes, repeat);
 
