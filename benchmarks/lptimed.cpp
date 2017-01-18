@@ -142,21 +142,8 @@ void demorandom(const uint64_t howmany, const float repeat,
     for (uint64_t i = 0; i < howmany; ++i) {
         keys.push_back(get64rand());
     }
-    std::cout << "displaying construction time per key, time per query,
-    probes per query, max probe per query and max avg probe " << endl;
-        std::cout << "     " << setw(10) << constructiontimepervalue / repeat
-                  << " avg cycles ";
-        std::cout << "     " << setw(10) << querycycles / repeat
-                  << " avg cycles ";
-        std::cout << "     " << setw(10) << probesperquery / repeat
-                  << " avg probes ";
-        std::cout << "     " << setw(10) << probesperquerystderr / repeat
-                  << " avg std. error ";
-        std::cout << "     " << setw(10) << maxprobesperquery / repeat
-                  << " avg max probes ";
-        std::cout << "     " << setw(10) << max_avg_probes
-                  << " max avg probes ";
-
+    std::cout << "displaying construction time per key, time per query, "
+    "probes per query, max probe per query and max avg probe " << endl;
     std::cout << howmany << " keys, " << repeat << " hash functions"
               << std::endl;
 
