@@ -16,9 +16,10 @@ endif # debug
 CFLAGS = $(FLAGS) -std=c99
 CXXFLAGS =  $(FLAGS) -std=c++11
 
+## fig2a.exe does not build
 all: benchmark.exe param_htbenchmark.exe htbenchmark.exe lptimed.exe	\
     bucketbenchmark.exe linearprobebenchmark.exe cw-trick-test.exe	\
-    collision-test.exe worst.exe fig2a.exe $(OBJECTS)
+    collision-test.exe worst.exe  $(OBJECTS)
 
 HEADERS = include/clhash.h include/tabulated.h include/util.h		\
     include/multiply-shift.h  include/faster-cw-trick.h include/cw-trick.h benchmarks/hashpack.h	\

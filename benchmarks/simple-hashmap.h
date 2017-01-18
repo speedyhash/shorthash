@@ -32,7 +32,7 @@ struct HashSet {
         shift_ = sizeof(size_t) * CHAR_BIT - log_capacity;
         HashFamily::InitRandomness(&hasher_);
     }
-
+    
     static ::std::string Name() {
         return ::std::string("LP-") + HashFamily::NAME;
     }
@@ -104,6 +104,17 @@ struct HashSet {
         return result;
     }
 
+    // dump the keys in the provided container
+    template <class container>
+    size_t GetKeys(container& keys)  {
+        size_t count = 0;
+        for (size_t offset = 0; offset < capacity_; ++offset) {
+          if (0 != slots_[offset]) {
+            keys[count ++] = slots_[offset];
+          }
+        }
+        return count;
+    }
    protected:
   template<typename T>
     void Upsize(T * backup) {
