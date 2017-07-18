@@ -27,18 +27,27 @@ static uint64_t kbitreverse64 (uint64_t n) {
   return n;
 }
 
+/**
+* As per the specification rand() returns an integer in [0, RAND_MAX] where
+* RAND_MAX>= 32767.
+* In Visual Studio, RAND_MAX is defined as 32767 or 15 bits so we cannot safely
+* assume that RAND_MAX is large.
+*/
+static uint32_t get8rand() {
+  return ((uint32_t) rand() ) & UINT32_C(0xFF);
+}
+
 static uint32_t get16rand() {
-  return rand() >> 7;
+  return ((uint32_t) rand() ^ (uint32_t) rand() << 15) & UINT32_C(0xFFFF);
 }
 
 static uint32_t get32rand() {
-    return (rand() ^ (rand() << 15) ^ (rand() << 30));
+    return ((uint32_t) rand() ^ ((uint32_t) rand() << 15) ^ ((uint32_t) rand() << 30));
 }
 
 static uint64_t get64rand() {
-    return (((uint64_t)get32rand()) << 32) | get32rand();
+    return (((uint64_t)get32rand()) << 32) | (uint32_t) get32rand();
 }
-
 
 static uint128_t get128rand() {
     return (((uint128_t)get64rand()) << 64) | get64rand();
