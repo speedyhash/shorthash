@@ -16,7 +16,7 @@ endif # debug
 CFLAGS = $(FLAGS) -std=c99
 CXXFLAGS =  $(FLAGS) -std=c++11
 
-all: benchmark.exe param_htbenchmark.exe htbenchmark.exe lptimed.exe	\
+all: benchmark.exe param_htbenchmark.exe htprint.exe htbenchmark.exe lptimed.exe	\
     bucketbenchmark.exe linearprobebenchmark.exe cw-trick-test.exe	\
     collision-test.exe worst.exe fig2a.exe $(OBJECTS)
 
@@ -33,6 +33,8 @@ benchmark.exe: ./benchmarks/benchmark.cpp siphash24.o $(HEADERS)
 	$(CXX) $(CXXFLAGS) -o $@ $< -Iinclude siphash24.o
 
 param_htbenchmark.exe: ./benchmarks/param_htbenchmark.cpp $(HEADERS)
+	$(CXX) $(CXXFLAGS) -o $@ $< -Iinclude
+htprint.exe: ./benchmarks/htprint.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -o $@ $< -Iinclude
 
 htbenchmark.exe: ./benchmarks/htbenchmark.cpp $(HEADERS)

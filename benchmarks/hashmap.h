@@ -162,6 +162,13 @@ public:
         return emplace(value.first, std::move(value.second));
     };
 
+    void debug_print() {
+      for(auto i = buckets_.begin() ; i != buckets_.end(); i++) {
+         std::cout<< ""<< i->first << ", "; 
+      }
+      std::cout << std::endl;
+    }
+
     template <class MT>
     std::pair<iterator, bool> emplace(key_type key, MT value) {
         if(key == empty_key_) throw std::runtime_error("can't use the empty key.");
