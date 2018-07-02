@@ -164,7 +164,7 @@ public:
 
     void debug_print() {
       for(auto i = buckets_.begin() ; i != buckets_.end(); i++) {
-         std::cout<< ""<< i->first << ", "; 
+         std::cout<< ""<< i->first << ", ";
       }
       std::cout << std::endl;
     }
@@ -208,10 +208,10 @@ public:
         size_t counted_probes = 0;
 
         for (size_t idx = ideal;; idx = probe_next(idx)) {
-            if(counted_probes != diff(idx,ideal) + 1) {
+            if(counted_probes != diff(idx,ideal) ) {
               printf("ideal = %zu counted_probes = %zu current index = %zu capacity = %zu diff(idx,ideal) = %zu ", ideal, counted_probes, idx, buckets_.size(), diff(idx,ideal));
             }
-            assert(counted_probes == diff(idx,ideal) + 1);
+            assert(counted_probes == diff(idx,ideal) );
             if (buckets_[idx].first == key) {
                 assert(counted_probes == expected_probes);
                 return true;
