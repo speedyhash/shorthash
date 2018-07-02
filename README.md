@@ -18,8 +18,4 @@ make
 ./benchmark.exe
 ```
 
-## Todo 
-- Test with hash table 
-
-
 
