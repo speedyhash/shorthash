@@ -16,6 +16,7 @@ extern "C" {
 #include "identity.h"
 #include "oddmultiply.h"
 #include "siphash24.h"
+#include "wyhash.h"
 }
 
 enum class HashBits { LOW, HIGH };
@@ -268,6 +269,12 @@ struct ClQuadratic64Pack : public GenericPack<uint64_t, cl_quadratic_t,
 struct ClFastQuadratic64Pack : public GenericPack<uint64_t, cl_fastquadratic_t,
         cl_fastquadratic_init, cl_fastquadratic> {
     static constexpr auto NAME = "ClFQuad64";
+};
+
+
+struct Wyhash64Pack
+        : public GenericPack<uint64_t, uint64_t, wyhash_init, wyhash> {
+    static constexpr auto NAME = "wyhash";
 };
 
 struct ClFastQuadratic32Pack : public GenericPack<uint32_t, cl_fastquadratic32_t,

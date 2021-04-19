@@ -49,8 +49,8 @@ static inline __m128i reduction64_si128(__m128i A) {
     const __m128i C =
         _mm_cvtsi64_si128((1U << 4) + (1U << 3) + (1U << 1) + (1U << 0));
     __m128i Q2 = _mm_clmulepi64_si128(A, C, 0x01);
-    const __m128i shuffle = _mm_setr_epi8(0, 27, 54, 45, 108, 119, 90, 65, 216,
-                                          195, 238, 245, 180, 175, 130, 153);
+    const __m128i shuffle = _mm_setr_epi8(0, 27, 54, 45, 108, 119, 90, 65,char(216),
+                                          char(195), char(238), char(245), char(180), char(175), char(130), char(153));
     // it might be possible to skip the _mm_srli_si128(Q2,8) line but it is
     // really cheap
     __m128i Q3 = _mm_shuffle_epi8(shuffle, _mm_srli_si128(Q2, 8));
